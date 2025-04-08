@@ -96,16 +96,16 @@ x64_dll:
 	@$(CXX) $(CXXFLAGS_RELEASE) -shared -o gerb2img_x64.dll $(SRCS_DLL) $(LIBS) $(LDFLAGS_DLL)
 	@$(MAKE) strip_debug LAST_BUILT=gerb2img_x64.dll
 	@echo "Done: gerb2img_x64.dll"
-	@echo "Press any key to next step..."
-	@read -n 1 -s -r  # Ожидание нажатия клавиши
+#	@echo "Press any key to next step..."
+#	@read -n 1 -s -r  # Ожидание нажатия клавиши
 
 x32_dll:
 	@echo "Building 32-bit DLL version..."
 	@$(CXX) $(CXXFLAGS_RELEASE) -shared -o gerb2img_x32.dll $(SRCS_DLL) $(LIBS) $(LDFLAGS_DLL)
 	@$(MAKE) strip_debug LAST_BUILT=gerb2img_x32.dll
 	@echo "Done: gerb2img_x32.dll"
-	@echo "Press any key to next step..."
-	@read -n 1 -s -r  # Ожидание нажатия клавиши
+#	@echo "Press any key to next step..."
+#	@read -n 1 -s -r  # Ожидание нажатия клавиши
 
 # Release: EXE
 x64_exe:
@@ -113,46 +113,46 @@ x64_exe:
 	@$(CXX) $(CXXFLAGS_RELEASE) -o gerb2img_x64.exe $(SRCS_EXE) $(LIBS) $(LDFLAGS_EXE)
 	@$(MAKE) strip_debug LAST_BUILT=gerb2img_x64.exe
 	@echo "Done: gerb2img_x64.exe"
-	@echo "Press any key to next step..."
-	@read -n 1 -s -r  # Ожидание нажатия клавиши
+#	@echo "Press any key to next step..."
+#	@read -n 1 -s -r  # Ожидание нажатия клавиши
 
 x32_exe:
 	@echo "Building 32-bit EXE version..."
 	@$(CXX) $(CXXFLAGS_RELEASE) -o gerb2img_x32.exe $(SRCS_EXE) $(LIBS) $(LDFLAGS_EXE)
 	@$(MAKE) strip_debug LAST_BUILT=gerb2img_x32.exe
 	@echo "Done: gerb2img_x32.exe"
-	@echo "Press any key to next step..."
-	@read -n 1 -s -r  # Ожидание нажатия клавиши
+#	@echo "Press any key to next step..."
+#	@read -n 1 -s -r  # Ожидание нажатия клавиши
 
 # Debug: DLL
 x64_dll_debug:
 	@echo "Building 64-bit DEBUG DLL version..."
 	@$(CXX) $(CXXFLAGS_DEBUG) -shared -o gerb2img_x64_debug.dll $(SRCS_DLL) $(LIBS) $(LDFLAGS_DLL)
 	@echo "Done: gerb2img_x64_debug.dll"
-	@echo "Press any key to next step..."
-	@read -n 1 -s -r  # Ожидание нажатия клавиши
+#	@echo "Press any key to next step..."
+#	@read -n 1 -s -r  # Ожидание нажатия клавиши
 
 x32_dll_debug:
 	@echo "Building 32-bit DEBUG DLL version..."
 	@$(CXX) $(CXXFLAGS_DEBUG) -shared -o gerb2img_x32_debug.dll $(SRCS_DLL) $(LIBS) $(LDFLAGS_DLL)
 	@echo "Done: gerb2img_x32_debug.dll"
-	@echo "Press any key to next step..."
-	@read -n 1 -s -r  # Ожидание нажатия клавиши
+#	@echo "Press any key to next step..."
+#	@read -n 1 -s -r  # Ожидание нажатия клавиши
 
 # Debug: EXE
 x64_exe_debug:
 	@echo "Building 64-bit DEBUG EXE version..."
 	@$(CXX) $(CXXFLAGS_DEBUG) -o gerb2img_x64_debug.exe $(SRCS_EXE) $(LIBS) $(LDFLAGS_EXE)
 	@echo "Done: gerb2img_x64_debug.exe"
-	@echo "Press any key to next step..."
-	@read -n 1 -s -r  # Ожидание нажатия клавиши
+#	@echo "Press any key to next step..."
+#	@read -n 1 -s -r  # Ожидание нажатия клавиши
 
 x32_exe_debug:
 	@echo "Building 32-bit DEBUG EXE version..."
 	@$(CXX) $(CXXFLAGS_DEBUG) -o gerb2img_x32_debug.exe $(SRCS_EXE) $(LIBS) $(LDFLAGS_EXE)
 	@echo "Done: gerb2img_x32_debug.exe"
-	@echo "Press any key to next step..."
-	@read -n 1 -s -r  # Ожидание нажатия клавиши
+#	@echo "Press any key to next step..."
+#	@read -n 1 -s -r  # Ожидание нажатия клавиши
 
 # Очистка
 clean:
@@ -162,8 +162,8 @@ clean:
 		gerb2img_x32_debug.dll gerb2img_x64_debug.dll \
 		gerb2img_x32_debug.exe gerb2img_x64_debug.exe
 	@echo "Cleaned build artifacts."
-	@echo "Press any key to next step..."
-	@read -n 1 -s -r  # Ожидание нажатия клавиши
+#	@echo "Press any key to next step..."
+#	@read -n 1 -s -r  # Ожидание нажатия клавиши
 
 # Удаление отладочной информации
 strip_debug:
@@ -174,8 +174,8 @@ strip_debug:
 	else \
 		echo "No file to strip."; \
 	fi
-	@echo "Press any key to next step..."
-	@read -n 1 -s -r  # Ожидание нажатия клавиши
+#	@echo "Press any key to next step..."
+#	@read -n 1 -s -r  # Ожидание нажатия клавиши
 
 .PHONY: all dll exe debug dll_debug exe_debug \
         x64_dll x32_dll x64_exe x32_exe \
