@@ -1,0 +1,200 @@
+[Tue Apr 08 16:52:37 2025
+] Checking architecture...
+[Tue Apr 08 16:52:37 2025
+] Architecture: 32-bit
+[Tue Apr 08 16:52:37 2025
+] Size of types:
+[Tue Apr 08 16:52:37 2025
+] sizeof(void*): 4
+[Tue Apr 08 16:52:37 2025
+] sizeof(size_t): 4
+[Tue Apr 08 16:52:37 2025
+] sizeof(long): 4
+[Tue Apr 08 16:52:37 2025
+] sizeof(int): 4
+[Tue Apr 08 16:52:37 2025
+] sizeof(double): 8
+[Tue Apr 08 16:52:37 2025
+] Logging data type sizes for 32-bit DLL:
+[Tue Apr 08 16:52:37 2025
+] sizeof(void*): 4
+[Tue Apr 08 16:52:37 2025
+] sizeof(size_t): 4
+[Tue Apr 08 16:52:37 2025
+] sizeof(long): 4
+[Tue Apr 08 16:52:37 2025
+] sizeof(int): 4
+[Tue Apr 08 16:52:37 2025
+] sizeof(double): 8
+[Tue Apr 08 16:52:37 2025
+] Entering processGerber...
+[Tue Apr 08 16:52:37 2025
+] Raw input parameters:
+[Tue Apr 08 16:52:37 2025
+] outputFilename: D:\gerb2img\delphi_demo\OUTPUT.bmp
+[Tue Apr 08 16:52:37 2025
+] inputFilename: D:\gerb2img\delphi_demo\GERBER\1.gbr
+[Tue Apr 08 16:52:37 2025
+] Validating pointers...
+[Tue Apr 08 16:52:37 2025
+] Pointer sizes:
+[Tue Apr 08 16:52:37 2025
+] Size of outputFilename pointer: 4
+[Tue Apr 08 16:52:37 2025
+] Size of inputFilename pointer: 4
+[Tue Apr 08 16:52:37 2025
+] Checking filename lengths...
+[Tue Apr 08 16:52:37 2025
+] outputFilename length: 34
+[Tue Apr 08 16:52:37 2025
+] inputFilename length: 36
+[Tue Apr 08 16:52:37 2025
+] Called processGerber with parameters:
+imageDPI: 1024
+optGrowUnitsMillimeters: false
+optBoarderUnitsMillimeters: false
+optBoarder: 0
+optInvertPolarity: false
+rowsPerStrip: 512
+optGrowSize: 0
+optScaleX: 1
+optScaleY: 1
+outputFilename: D:\gerb2img\delphi_demo\OUTPUT.bmp
+inputFilename: D:\gerb2img\delphi_demo\GERBER\1.gbr
+[Tue Apr 08 16:52:37 2025
+] Normalizing file paths...
+[Tue Apr 08 16:52:37 2025
+] Normalized paths:
+[Tue Apr 08 16:52:37 2025
+] normalizedOutputFilename: D:\\gerb2img\\delphi_demo\\OUTPUT.bmp
+[Tue Apr 08 16:52:37 2025
+] normalizedInputFilename: D:\\gerb2img\\delphi_demo\\GERBER\\1.gbr
+[Tue Apr 08 16:52:37 2025
+] Validating normalized paths...
+[Tue Apr 08 16:52:37 2025
+] Dumping normalized filenames as bytes...
+[Tue Apr 08 16:52:37 2025
+] normalizedOutputFilename bytes: 44 3a 5c 5c 67 65 72 62 32 69 6d 67 5c 5c 64 65 6c 70 68 69 5f 64 65 6d 6f 5c 5c 4f 55 54 50 55 54 2e 62 6d 70 
+[Tue Apr 08 16:52:37 2025
+] normalizedInputFilename bytes: 44 3a 5c 5c 67 65 72 62 32 69 6d 67 5c 5c 64 65 6c 70 68 69 5f 64 65 6d 6f 5c 5c 47 45 52 42 45 52 5c 5c 31 2e 67 62 72 
+[Tue Apr 08 16:52:37 2025
+] Checking input file...
+[Tue Apr 08 16:52:37 2025
+] Starting Gerber file processing...
+[Tue Apr 08 16:52:37 2025
+] file: D:\\gerb2img\\delphi_demo\\GERBER\\1.gbr
+imageDPI: 1024
+optGrowSize: 0
+optScaleX: 1
+optScaleY: 1
+[Tue Apr 08 16:52:37 2025
+] Creating Gerber object for file: D:\\gerb2img\\delphi_demo\\GERBER\\1.gbr
+[Tue Apr 08 16:52:59 2025
+] Gerber file loaded and processed.
+[Tue Apr 08 16:52:59 2025
+] Starting polygon grouping...
+[Tue Apr 08 16:52:59 2025
+] Polygon grouping completed. Total polygons: 16880
+[Tue Apr 08 16:52:59 2025
+] Calculating polygon boundaries...
+[Tue Apr 08 16:52:59 2025
+] Polygon boundaries calculated: minx=2448, maxx=5437, miny=-9328, maxy=-7159
+[Tue Apr 08 16:52:59 2025
+] Starting image creation...
+[Tue Apr 08 16:52:59 2025
+] Creating BMP image...
+[Tue Apr 08 16:53:00 2025
+] BMP image created successfully.
+[Tue Apr 08 16:53:00 2025
+] Image creation completed in 22.302000 seconds.
+[Tue Apr 08 16:53:11 2025
+] Checking architecture...
+[Tue Apr 08 16:53:11 2025
+] Architecture: 32-bit
+[Tue Apr 08 16:53:11 2025
+] Size of types:
+[Tue Apr 08 16:53:11 2025
+] sizeof(void*): 4
+[Tue Apr 08 16:53:11 2025
+] sizeof(size_t): 4
+[Tue Apr 08 16:53:11 2025
+] sizeof(long): 4
+[Tue Apr 08 16:53:11 2025
+] sizeof(int): 4
+[Tue Apr 08 16:53:11 2025
+] sizeof(double): 8
+[Tue Apr 08 16:53:11 2025
+] Logging data type sizes for 32-bit DLL:
+[Tue Apr 08 16:53:11 2025
+] sizeof(void*): 4
+[Tue Apr 08 16:53:11 2025
+] sizeof(size_t): 4
+[Tue Apr 08 16:53:11 2025
+] sizeof(long): 4
+[Tue Apr 08 16:53:11 2025
+] sizeof(int): 4
+[Tue Apr 08 16:53:11 2025
+] sizeof(double): 8
+[Tue Apr 08 16:53:11 2025
+] Entering processGerber...
+[Tue Apr 08 16:53:11 2025
+] Raw input parameters:
+[Tue Apr 08 16:53:11 2025
+] outputFilename: D:\gerb2img\delphi_demo\OUTPUT.bmp
+[Tue Apr 08 16:53:11 2025
+] inputFilename: D:\gerb2img\delphi_demo\GERBER\123.gbr
+[Tue Apr 08 16:53:11 2025
+] Validating pointers...
+[Tue Apr 08 16:53:11 2025
+] Pointer sizes:
+[Tue Apr 08 16:53:11 2025
+] Size of outputFilename pointer: 4
+[Tue Apr 08 16:53:11 2025
+] Size of inputFilename pointer: 4
+[Tue Apr 08 16:53:11 2025
+] Checking filename lengths...
+[Tue Apr 08 16:53:11 2025
+] outputFilename length: 34
+[Tue Apr 08 16:53:11 2025
+] inputFilename length: 38
+[Tue Apr 08 16:53:11 2025
+] Called processGerber with parameters:
+imageDPI: 300
+optGrowUnitsMillimeters: false
+optBoarderUnitsMillimeters: false
+optBoarder: 0
+optInvertPolarity: false
+rowsPerStrip: 512
+optGrowSize: 0
+optScaleX: 1
+optScaleY: 1
+outputFilename: D:\gerb2img\delphi_demo\OUTPUT.bmp
+inputFilename: D:\gerb2img\delphi_demo\GERBER\123.gbr
+[Tue Apr 08 16:53:11 2025
+] Normalizing file paths...
+[Tue Apr 08 16:53:11 2025
+] Normalized paths:
+[Tue Apr 08 16:53:11 2025
+] normalizedOutputFilename: D:\\gerb2img\\delphi_demo\\OUTPUT.bmp
+[Tue Apr 08 16:53:11 2025
+] normalizedInputFilename: D:\\gerb2img\\delphi_demo\\GERBER\\123.gbr
+[Tue Apr 08 16:53:11 2025
+] Validating normalized paths...
+[Tue Apr 08 16:53:11 2025
+] Dumping normalized filenames as bytes...
+[Tue Apr 08 16:53:11 2025
+] normalizedOutputFilename bytes: 44 3a 5c 5c 67 65 72 62 32 69 6d 67 5c 5c 64 65 6c 70 68 69 5f 64 65 6d 6f 5c 5c 4f 55 54 50 55 54 2e 62 6d 70 
+[Tue Apr 08 16:53:11 2025
+] normalizedInputFilename bytes: 44 3a 5c 5c 67 65 72 62 32 69 6d 67 5c 5c 64 65 6c 70 68 69 5f 64 65 6d 6f 5c 5c 47 45 52 42 45 52 5c 5c 31 32 33 2e 67 62 72 
+[Tue Apr 08 16:53:11 2025
+] Checking input file...
+[Tue Apr 08 16:53:11 2025
+] Starting Gerber file processing...
+[Tue Apr 08 16:53:11 2025
+] file: D:\\gerb2img\\delphi_demo\\GERBER\\123.gbr
+imageDPI: 300
+optGrowSize: 0
+optScaleX: 1
+optScaleY: 1
+[Tue Apr 08 16:53:11 2025
+] Creating Gerber object for file: D:\\gerb2img\\delphi_demo\\GERBER\\123.gbr

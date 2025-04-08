@@ -1,0 +1,3 @@
+EXPORTS
+    processGerber = processGerber@64 @1
+    processGerberJSON = processGerberJSON@4 @2

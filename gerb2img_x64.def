@@ -1,0 +1,3 @@
+EXPORTS
+    processGerber @1
+    processGerberJSON @2
