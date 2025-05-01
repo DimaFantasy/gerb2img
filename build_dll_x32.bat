@@ -1,7 +1,5 @@
 @echo off
+chcp 65001 >nul
 echo === Запуск сборки 32-битной DLL (Release) ===
 SET MSYS2_PATH=C:\msys64
-"%MSYS2_PATH%\msys2_shell.cmd" -mingw32 -here -c "cd '%CD%' && make dll"
-echo.
-echo === Сборка завершена ===
-pause
+"%MSYS2_PATH%\mingw32.exe" make dll

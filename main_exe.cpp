@@ -53,7 +53,7 @@ const char *help_message =
 	"\n"
 	"Where file1 file2... are gerber files rendered as overlays to a single bitmap.\n"
 	"Standard input is read if no gerber files specified and --output is specified.\n"
-	"Output bitmap is compressed monochrome TIFF"
+	"Output bitmap is compressed monochrome TIFF";
 
 
 void show_interval(const char *msg = "")
