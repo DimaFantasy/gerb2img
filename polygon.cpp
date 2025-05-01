@@ -269,7 +269,6 @@ void VertexData::add(double x, double y)
  */
 void VertexData::addArc(double start_angle, double end_angle, double radius, double x0, double y0, bool clockwise)
 {
-
 	double deviaion = 0.01;
 	if (radius < 0.5)
 		radius = 0.5;
@@ -291,10 +290,31 @@ void VertexData::addArc(double start_angle, double end_angle, double radius, dou
 	if (clockwise)
 		arc = 2 * M_PI - arc;
 
-	int N = int(ceil(arc / step)); // get integer number of arc divisions
-	step = arc / (N - 1);		   // re-calculate the step angle for integer divisions.
-	if (N < 2)
+	// Проверка на нулевую дугу
+	if (fabs(arc) < 1e-10) {
+		// Для нулевой дуги добавим только одну точку в начальном положении
+		double const x = radius * cos(start_angle) + x0;
+		double const y = radius * sin(start_angle) + y0;  // y0 вместо x0
+		add(x, y);
 		return;
+	}
+
+	// Проверка на очень маленький шаг, чтобы избежать деления на ноль
+	if (step < 1e-10) 
+		step = 1e-10;
+
+	int N = int(ceil(arc / step)); // get integer number of arc divisions
+	
+	// Проверка на минимальное число сегментов
+	if (N <= 0)
+		N = 1;  // Минимум 1 сегмент для ненулевой дуги
+	
+	// Перерасчет step для обеспечения целого числа шагов
+	step = arc / N;
+	
+	if (N < 2)
+		N = 2;  // Минимум 2 точки для формирования дуги
+	
 	if (clockwise)
 		step *= -1;
 

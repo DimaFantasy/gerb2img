@@ -75,7 +75,7 @@ object Form1: TForm1
     end
   end
   object OpenDialog1: TOpenDialog
-    Filter = 'Gerber|*.gbr'
+    Filter = 'Gerber|*.gbr|All|*.*'
     Left = 656
     Top = 336
   end
