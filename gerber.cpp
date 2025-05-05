@@ -142,7 +142,7 @@ void Gerber::calculateArc(Arc &arc)
 		warning("negative I or J found in single quadrant mode. Forcing to 360 degree mode.");
 		isCircular360 = true;
 	}
-
+	
 	if (isCircular360 == false && abs(Point(I, J)) >= 0.01)
 	{ // Determine the correct signedness of I J coordinates in single quadrant mode.
 		// Let:	S = start point
@@ -274,6 +274,8 @@ double Gerber::getCoordinate(char *text, int axis, bool is_I_J)
 //--------------------------------------------------------------------------------------------------
 void Gerber::process_AD_block(int DCode)
 {
+	std::ofstream logFile("gerber_debug.log", std::ios::app);
+	logFile << "[DEBUG] Entering process_AD_block with DCode=" << DCode << "\n";
 
 	int composite_count = 0;
 	Aperture *arp = 0;
@@ -290,6 +292,7 @@ void Gerber::process_AD_block(int DCode)
 	// Create a new aperture object for this AD code.
 	if (arp == 0)
 	{
+		logFile << "[DEBUG] Creating new aperture object for DCode=" << DCode << "\n";
 		ad_apertures.push_back(Aperture()); // blank aperture
 		arp = &ad_apertures.back();
 	}
@@ -355,10 +358,13 @@ void Gerber::process_AD_block(int DCode)
 		throw oss.str();
 	}
 
+	logFile.close();
 } // end of AD command block  processing
 
 void Gerber::process_G_command(int code)
 {
+	std::ofstream logFile("gerber_debug.log", std::ios::app);
+	logFile << "[DEBUG] Entering process_G_command with code=" << code << "\n";
 
 	// G codes (general functions)
 	if (code == 1)
@@ -402,10 +408,14 @@ void Gerber::process_G_command(int code)
 			polygons.back().polarity = CLEAR;
 		} // polygon polarity dependent on PLC / PLD parameters
 	}
+
+	logFile.close();
 }
 
 void Gerber::process_D_command(int code)
 {
+	std::ofstream logFile("gerber_debug.log", std::ios::app);
+	logFile << "[DEBUG] Entering process_D_command with code=" << code << "\n";
 
 	if (code >= 10)
 	{
@@ -436,10 +446,14 @@ void Gerber::process_D_command(int code)
 	{
 		isLampOn = false;
 	}
+
+	logFile.close();
 }
 
 void Gerber::processDataBlock()
 {
+	std::ofstream logFile("gerber_debug.log", std::ios::app);
+	logFile << "[DEBUG] Entering processDataBlock\n";
 
 	// special variables containing arc information when in circular mode
 
@@ -599,6 +613,8 @@ void Gerber::processDataBlock()
 	oldX = X;
 	oldY = Y;
 	isDrawingEnabled = false; // disable drawing after each data block. re-enabled on any D1 or a X, Y command
+
+	logFile.close();
 }
 
 /*
@@ -692,9 +708,24 @@ void Gerber::loadDefaults()
 Gerber::Gerber(FILE *fp_gerb, const double dotsPerInch, const double growSize, double optScaleX, double optScaleY)
 	: dotsPerInch(dotsPerInch), growSize(growSize), optScaleX(optScaleX), optScaleY(optScaleY)
 {
+	std::ofstream logFile("gerber_debug.log", std::ios::app);
+	logFile << "[DEBUG] Entering Gerber constructor\n";
+	logFile << "[DEBUG] Parameters: imageDPI=" << dotsPerInch
+			<< ", optGrowSize=" << growSize
+			<< ", optScaleX=" << optScaleX
+			<< ", optScaleY=" << optScaleY << "\n";
+
+	// Логирование размеров типов данных
+	logFile << "[DEBUG] Size of types:\n";
+	logFile << "sizeof(void*): " << sizeof(void*) << "\n";
+	logFile << "sizeof(size_t): " << sizeof(size_t) << "\n";
+	logFile << "sizeof(long): " << sizeof(long) << "\n";
+	logFile << "sizeof(int): " << sizeof(int) << "\n";
+	logFile << "sizeof(double): " << sizeof(double) << "\n";
 
 	if (!fp_gerb)
 	{
+		logFile << "[ERROR] File pointer is null\n";
 		throw std::runtime_error("File pointer is null");
 	}
 
@@ -702,12 +733,24 @@ Gerber::Gerber(FILE *fp_gerb, const double dotsPerInch, const double growSize, d
 	fseek(fp_gerb, 0, SEEK_END);
 	long fileSize = ftell(fp_gerb);
 	rewind(fp_gerb);
+	logFile << "[DEBUG] File size: " << fileSize << " bytes\n";
 
 	if (fileSize <= 0)
 	{
+		logFile << "[ERROR] File is empty or invalid\n";
 		throw std::runtime_error("File is empty or invalid");
 	}
 
+	// Чтение первых 256 байт для анализа
+	char buffer[256] = {0};
+	size_t bytesRead = fread(buffer, 1, sizeof(buffer), fp_gerb);
+	logFile << "[DEBUG] Read " << bytesRead << " bytes from file for analysis\n";
+	std::ostringstream fileContentLog;
+	for (size_t i = 0; i < bytesRead; i++)
+	{
+		fileContentLog << std::hex << static_cast<int>(static_cast<unsigned char>(buffer[i])) << " ";
+	}
+	logFile << "[DEBUG] File content (first 256 bytes): " << fileContentLog.str() << "\n";
 	rewind(fp_gerb);
 
 	try
@@ -720,19 +763,26 @@ Gerber::Gerber(FILE *fp_gerb, const double dotsPerInch, const double growSize, d
 		coordsInts[0] = -1; // assign to negative value until FS parameter encounter
 		units = UNDEFINED;
 
+		logFile << "[DEBUG] Calling loadDefaults()\n";
 		loadDefaults();
+		logFile << "[DEBUG] loadDefaults() completed\n";
 
+		logFile << "[DEBUG] Calling yyrestart()\n";
 		yyrestart(fp_gerb); // set a new input file for FLEX, flushes input buffer.
+		logFile << "[DEBUG] yyrestart() completed\n";
 
+		logFile << "[DEBUG] Calling yyparse()\n";
 		yyparse(this);
+		logFile << "[DEBUG] yyparse() completed\n";
 
 		// Modify then Initialise all vertices used by the polygons
 		for (list<VertexData *>::iterator it = vertexdata.begin(); it != vertexdata.end(); it++)
 		{
-
+			logFile << "[DEBUG] Rotating and initializing vertex data\n";
 			(*it)->rotate(imageRotate); // Rotate the vertices specified by the Image Rotate parameter.
 			(*it)->initialise();
 		}
+		logFile << "[DEBUG] Vertices initialized successfully\n";
 
 		// Initialise the polygons
 		int k = 0;
@@ -740,7 +790,7 @@ Gerber::Gerber(FILE *fp_gerb, const double dotsPerInch, const double growSize, d
 		{
 			if (it->empty())
 			{
-
+				logFile << "[DEBUG] Removing empty polygon\n";
 				it = polygons.erase(it);
 				continue;
 			}
@@ -748,6 +798,7 @@ Gerber::Gerber(FILE *fp_gerb, const double dotsPerInch, const double growSize, d
 			// Rotate entire gerber image as specified by IR parameter
 			it->offset.rotate(imageRotate);
 
+			logFile << "[DEBUG] Initializing polygon\n";
 			it->initialise(); // Initialise to calculate raster x1,x2 data.
 
 			// Identify each polygon with a drawing order number.
@@ -755,26 +806,33 @@ Gerber::Gerber(FILE *fp_gerb, const double dotsPerInch, const double growSize, d
 			k++;
 			it++;
 		}
+		logFile << "[DEBUG] Polygons initialized successfully\n";
 
 		if (polygons.size() == 0)
 			warning("nothing to draw");
 
 		// Sort all polygons object so they have ascending miny values.
+		logFile << "[DEBUG] Sorting polygons\n";
 		polygons.sort();
+		logFile << "[DEBUG] Polygons sorted successfully\n";
 	}
 	catch (const string &msg)
 	{
 		isError = true;
 		errorMessage << "error: " << msg << ". stopped at line " << currentLine;
+		logFile << "[ERROR] Exception during parsing: " << msg << "\n";
 	}
 	catch (const std::exception &e)
 	{
 		isError = true;
 		errorMessage << "error: " << e.what() << ". stopped at line " << currentLine;
+		logFile << "[ERROR] Exception during parsing: " << e.what() << "\n";
 	}
 	catch (...)
 	{
 		isError = true;
 		errorMessage << "error: Unknown exception. stopped at line " << currentLine;
+		logFile << "[ERROR] Unknown exception during parsing\n";
 	}
+	logFile.close();
 }

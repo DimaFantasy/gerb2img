@@ -1,4 +1,26 @@
-// This file is distributed under the terms of the GNU General Public License v3.
+/*
+File:	 	main.cpp
+Author: 	Adam Seychell
+Description:  main function for gerb2img program.
+
+
+	copyright (c), 2001 Adam Seychell.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+*/
 
 #include <time.h>
 #include <iostream>
@@ -53,8 +75,10 @@ const char *help_message =
 	"\n"
 	"Where file1 file2... are gerber files rendered as overlays to a single bitmap.\n"
 	"Standard input is read if no gerber files specified and --output is specified.\n"
-	"Output bitmap is compressed monochrome TIFF";
-
+	"Output bitmap is compressed monochrome TIFF.\n"
+	"\n"
+	"For latest releases and report bugs visit gerb2img home page at:\n"
+	" http://members.optusnet.com.au/eseychell\n";
 
 void show_interval(const char *msg = "")
 {
@@ -471,13 +495,13 @@ int main(int argc, char **argv)
 	if (optVerbose >= 1)
 	{
 		std::printf("Image data\n"
-					"  origin (mm):               %.3f x %.3f\n"
-					"  size (mm):                 %.3f x %.3f\n"
-					"  size (pixels):             %u x %d\n"
-					"  uncompressed size (MB):    %.1f\n"
-					"  dots per inch:             %u\n"
-					"  TIFF rows per strip        %u\n",
-					(-xOffset + minx) / imageDPI * 25.4, (-yOffset + miny) / imageDPI * 25.4, imageWidth / imageDPI * 25.4, imageHeight / imageDPI * 25.4, imageWidth, imageHeight, float((((imageWidth + 7) / 8) * imageHeight) / 0x100000), int(imageDPI), rowsPerStrip);
+			   "  origin (mm):               %.3f x %.3f\n"
+			   "  size (mm):                 %.3f x %.3f\n"
+			   "  size (pixels):             %u x %d\n"
+			   "  uncompressed size (MB):    %.1f\n"
+			   "  dots per inch:             %u\n"
+			   "  TIFF rows per strip        %u\n",
+			   (-xOffset + minx) / imageDPI * 25.4, (-yOffset + miny) / imageDPI * 25.4, imageWidth / imageDPI * 25.4, imageHeight / imageDPI * 25.4, imageWidth, imageHeight, float((((imageWidth + 7) / 8) * imageHeight) / 0x100000), int(imageDPI), rowsPerStrip);
 	}
 	fflush(stdout);
 
