@@ -1,5 +1,7 @@
 // This file is distributed under the terms of the GNU General Public License v3.
 
+// #define ENABLE_DEBUG_LOGGING // закомментируйте эту строку, чтобы отключить логирование
+
 #define _USE_MATH_DEFINES
 #include <vector>
 #include <list>
@@ -274,8 +276,10 @@ double Gerber::getCoordinate(char *text, int axis, bool is_I_J)
 //--------------------------------------------------------------------------------------------------
 void Gerber::process_AD_block(int DCode)
 {
+#ifdef ENABLE_DEBUG_LOGGING
 	std::ofstream logFile("gerber_debug.log", std::ios::app);
 	logFile << "[DEBUG] Entering process_AD_block with DCode=" << DCode << "\n";
+#endif
 
 	int composite_count = 0;
 	Aperture *arp = 0;
@@ -292,7 +296,9 @@ void Gerber::process_AD_block(int DCode)
 	// Create a new aperture object for this AD code.
 	if (arp == 0)
 	{
+#ifdef ENABLE_DEBUG_LOGGING
 		logFile << "[DEBUG] Creating new aperture object for DCode=" << DCode << "\n";
+#endif
 		ad_apertures.push_back(Aperture()); // blank aperture
 		arp = &ad_apertures.back();
 	}
@@ -358,13 +364,17 @@ void Gerber::process_AD_block(int DCode)
 		throw oss.str();
 	}
 
+#ifdef ENABLE_DEBUG_LOGGING
 	logFile.close();
+#endif
 } // end of AD command block  processing
 
 void Gerber::process_G_command(int code)
 {
+#ifdef ENABLE_DEBUG_LOGGING
 	std::ofstream logFile("gerber_debug.log", std::ios::app);
 	logFile << "[DEBUG] Entering process_G_command with code=" << code << "\n";
+#endif
 
 	// G codes (general functions)
 	if (code == 1)
@@ -409,13 +419,17 @@ void Gerber::process_G_command(int code)
 		} // polygon polarity dependent on PLC / PLD parameters
 	}
 
+#ifdef ENABLE_DEBUG_LOGGING
 	logFile.close();
+#endif
 }
 
 void Gerber::process_D_command(int code)
 {
+#ifdef ENABLE_DEBUG_LOGGING
 	std::ofstream logFile("gerber_debug.log", std::ios::app);
 	logFile << "[DEBUG] Entering process_D_command with code=" << code << "\n";
+#endif
 
 	if (code >= 10)
 	{
@@ -447,13 +461,17 @@ void Gerber::process_D_command(int code)
 		isLampOn = false;
 	}
 
+#ifdef ENABLE_DEBUG_LOGGING
 	logFile.close();
+#endif
 }
 
 void Gerber::processDataBlock()
 {
+#ifdef ENABLE_DEBUG_LOGGING
 	std::ofstream logFile("gerber_debug.log", std::ios::app);
 	logFile << "[DEBUG] Entering processDataBlock\n";
+#endif
 
 	// special variables containing arc information when in circular mode
 
@@ -614,7 +632,9 @@ void Gerber::processDataBlock()
 	oldY = Y;
 	isDrawingEnabled = false; // disable drawing after each data block. re-enabled on any D1 or a X, Y command
 
+#ifdef ENABLE_DEBUG_LOGGING
 	logFile.close();
+#endif
 }
 
 /*
@@ -708,6 +728,7 @@ void Gerber::loadDefaults()
 Gerber::Gerber(FILE *fp_gerb, const double dotsPerInch, const double growSize, double optScaleX, double optScaleY)
 	: dotsPerInch(dotsPerInch), growSize(growSize), optScaleX(optScaleX), optScaleY(optScaleY)
 {
+#ifdef ENABLE_DEBUG_LOGGING
 	std::ofstream logFile("gerber_debug.log", std::ios::app);
 	logFile << "[DEBUG] Entering Gerber constructor\n";
 	logFile << "[DEBUG] Parameters: imageDPI=" << dotsPerInch
@@ -752,6 +773,7 @@ Gerber::Gerber(FILE *fp_gerb, const double dotsPerInch, const double growSize, d
 	}
 	logFile << "[DEBUG] File content (first 256 bytes): " << fileContentLog.str() << "\n";
 	rewind(fp_gerb);
+#endif
 
 	try
 	{
@@ -763,26 +785,38 @@ Gerber::Gerber(FILE *fp_gerb, const double dotsPerInch, const double growSize, d
 		coordsInts[0] = -1; // assign to negative value until FS parameter encounter
 		units = UNDEFINED;
 
+#ifdef ENABLE_DEBUG_LOGGING
 		logFile << "[DEBUG] Calling loadDefaults()\n";
+#endif
 		loadDefaults();
+#ifdef ENABLE_DEBUG_LOGGING
 		logFile << "[DEBUG] loadDefaults() completed\n";
 
 		logFile << "[DEBUG] Calling yyrestart()\n";
+#endif
 		yyrestart(fp_gerb); // set a new input file for FLEX, flushes input buffer.
+#ifdef ENABLE_DEBUG_LOGGING
 		logFile << "[DEBUG] yyrestart() completed\n";
 
 		logFile << "[DEBUG] Calling yyparse()\n";
+#endif
 		yyparse(this);
+#ifdef ENABLE_DEBUG_LOGGING
 		logFile << "[DEBUG] yyparse() completed\n";
+#endif
 
 		// Modify then Initialise all vertices used by the polygons
 		for (list<VertexData *>::iterator it = vertexdata.begin(); it != vertexdata.end(); it++)
 		{
+#ifdef ENABLE_DEBUG_LOGGING
 			logFile << "[DEBUG] Rotating and initializing vertex data\n";
+#endif
 			(*it)->rotate(imageRotate); // Rotate the vertices specified by the Image Rotate parameter.
 			(*it)->initialise();
 		}
+#ifdef ENABLE_DEBUG_LOGGING
 		logFile << "[DEBUG] Vertices initialized successfully\n";
+#endif
 
 		// Initialise the polygons
 		int k = 0;
@@ -790,7 +824,9 @@ Gerber::Gerber(FILE *fp_gerb, const double dotsPerInch, const double growSize, d
 		{
 			if (it->empty())
 			{
+#ifdef ENABLE_DEBUG_LOGGING
 				logFile << "[DEBUG] Removing empty polygon\n";
+#endif
 				it = polygons.erase(it);
 				continue;
 			}
@@ -798,7 +834,9 @@ Gerber::Gerber(FILE *fp_gerb, const double dotsPerInch, const double growSize, d
 			// Rotate entire gerber image as specified by IR parameter
 			it->offset.rotate(imageRotate);
 
+#ifdef ENABLE_DEBUG_LOGGING
 			logFile << "[DEBUG] Initializing polygon\n";
+#endif
 			it->initialise(); // Initialise to calculate raster x1,x2 data.
 
 			// Identify each polygon with a drawing order number.
@@ -806,33 +844,47 @@ Gerber::Gerber(FILE *fp_gerb, const double dotsPerInch, const double growSize, d
 			k++;
 			it++;
 		}
+#ifdef ENABLE_DEBUG_LOGGING
 		logFile << "[DEBUG] Polygons initialized successfully\n";
+#endif
 
 		if (polygons.size() == 0)
 			warning("nothing to draw");
 
 		// Sort all polygons object so they have ascending miny values.
+#ifdef ENABLE_DEBUG_LOGGING
 		logFile << "[DEBUG] Sorting polygons\n";
+#endif
 		polygons.sort();
+#ifdef ENABLE_DEBUG_LOGGING
 		logFile << "[DEBUG] Polygons sorted successfully\n";
+#endif
 	}
 	catch (const string &msg)
 	{
 		isError = true;
 		errorMessage << "error: " << msg << ". stopped at line " << currentLine;
+#ifdef ENABLE_DEBUG_LOGGING
 		logFile << "[ERROR] Exception during parsing: " << msg << "\n";
+#endif
 	}
 	catch (const std::exception &e)
 	{
 		isError = true;
 		errorMessage << "error: " << e.what() << ". stopped at line " << currentLine;
+#ifdef ENABLE_DEBUG_LOGGING
 		logFile << "[ERROR] Exception during parsing: " << e.what() << "\n";
+#endif
 	}
 	catch (...)
 	{
 		isError = true;
 		errorMessage << "error: Unknown exception. stopped at line " << currentLine;
+#ifdef ENABLE_DEBUG_LOGGING
 		logFile << "[ERROR] Unknown exception during parsing\n";
+#endif
 	}
+#ifdef ENABLE_DEBUG_LOGGING
 	logFile.close();
+#endif
 }
