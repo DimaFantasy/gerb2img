@@ -70,6 +70,11 @@ SRCS_EXE := \
     gerber_flex.cc \
     EasyBMP/EasyBMP.cpp
 
+# Правило для генерации лексера с помощью Flex
+gerber_flex.cc: gerber_flex.ll
+	@echo "Generating lexer with Flex..."
+	@flex -o gerber_flex.cc gerber_flex.ll
+
 # Последний собранный файл
 LAST_BUILT :=
 
@@ -89,6 +94,10 @@ exe: x64_exe
 dll_debug: x64_dll_debug
 exe_debug: x64_exe_debug
 endif
+
+# Все цели зависят от gerber_flex.cc
+x64_dll x32_dll x64_exe x32_exe x64_dll_debug x32_dll_debug x64_exe_debug x32_exe_debug: gerber_flex.cc
+
 
 # Release: DLL
 x64_dll:
@@ -155,12 +164,14 @@ x32_exe_debug:
 #	@read -n 1 -s -r  # Ожидание нажатия клавиши
 
 # Очистка
+# Очистка
 clean:
 	@rm -f \
 		gerb2img_x32.dll gerb2img_x64.dll \
 		gerb2img_x32.exe gerb2img_x64.exe \
 		gerb2img_x32_debug.dll gerb2img_x64_debug.dll \
-		gerb2img_x32_debug.exe gerb2img_x64_debug.exe
+		gerb2img_x32_debug.exe gerb2img_x64_debug.exe \
+		gerber_flex.cc
 	@echo "Cleaned build artifacts."
 #	@echo "Press any key to next step..."
 #	@read -n 1 -s -r  # Ожидание нажатия клавиши

@@ -1,6 +1,5 @@
-#line 1 "gerber_flex.cc"
 
-#line 3 "gerber_flex.cc"
+#line 2 "lex.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -367,15 +366,15 @@ struct yy_trans_info
 static const flex_int16_t yy_accept[140] =
     {   0,
         0,    0,    0,    0,    0,    0,    0,    0,   41,   39,
-        1,    2,   39,   38,   39,    4,   38,   38,   38,   38,
+        1,    2,   39,   38,   39,    3,   38,   38,   38,   38,
        38,   38,   38,   38,   38,   38,   38,   38,   38,   37,
-       39,   36,    8,    8,    0,    4,    4,    4,   15,    6,
+       39,   36,    8,    8,    0,    3,    3,    3,   15,    6,
         0,    0,    0,   11,    0,   27,   35,    0,   33,    0,
         0,    0,    0,   28,   16,   32,    0,   24,   23,    0,
        34,    0,    0,    0,   25,    0,   26,    5,    8,    8,
-        0,    4,    4,    0,    0,    0,    0,   11,   35,    0,
+        0,    3,    3,    0,    0,    0,    0,   11,   35,    0,
        33,    0,    0,    0,    0,    0,   31,   32,   18,   17,
-        0,    0,    0,    0,   34,    0,    0,    0,    3,    4,
+        0,    0,    0,    0,   34,    0,    0,    0,    4,    3,
 
         7,    0,    0,    0,   10,    0,    0,   29,    0,    0,
        31,   23,   23,   21,   22,    0,    0,   30,    0,    0,
@@ -417,31 +416,31 @@ static const YY_CHAR yy_ec[256] =
 
 static const YY_CHAR yy_meta[36] =
     {   0,
-        1,    1,    2,    1,    1,    1,    3,    4,    4,    5,
-        5,    5,    5,    1,    6,    6,    7,    7,    7,    7,
-        7,    7,    8,    7,    7,    7,    7,    7,    8,    7,
-        7,    7,    7,    7,    7
+        1,    1,    2,    1,    3,    1,    4,    5,    5,    6,
+        6,    6,    6,    1,    7,    7,    8,    8,    8,    8,
+        8,    8,    9,    8,    8,    8,    8,    8,    9,    8,
+        8,    8,    8,    8,    8
     } ;
 
 static const flex_int16_t yy_base[158] =
     {   0,
-        0,    0,   32,    0,   33,   37,   66,    0,  389,  599,
-      599,  599,   38,  599,   92,   97,   93,  356,   33,  118,
-      104,  358,   91,   31,  366,  365,   93,  142,  148,  599,
-      152,  599,  156,  160,  164,  170,  174,  179,  366,  599,
-      368,  349,  123,    0,  183,  187,    0,    0,    0,  107,
+        0,    0,   32,    0,   33,   37,   66,    0,  388,  608,
+      608,  608,   38,  608,   92,   97,   93,  355,   33,  118,
+      104,  357,   91,   31,  365,  364,   93,  142,  148,  608,
+      152,  608,  156,  160,  164,  170,  174,  179,  365,  608,
+      367,  342,  123,    0,  183,  187,    0,    0,    0,  107,
       104,  131,  191,  195,    0,    0,  126,  199,  198,  114,
         0,  200,  194,  209,  213,  219,  223,  227,    0,  232,
-      368,  236,  241,  245,  226,  341,  251,    0,    0,  366,
-        0,  257,  353,  336,  258,  262,  267,    0,  599,  599,
-      271,  275,  312,  301,    0,  279,  281,  314,  276,  281,
+      367,  236,  241,  245,  226,  340,  251,    0,    0,  365,
+        0,  257,  346,  311,  258,  262,  267,    0,  608,  608,
+      271,  275,  300,  294,    0,  279,  281,  276,  608,  281,
 
-      285,  141,  135,  289,  599,  294,  298,  314,  124,   95,
-      302,  102,  599,  599,  599,  307,  321,  326,  334,  338,
-      343,   29,   12,  324,  344,  599,  599,  346,  368,  599,
-      599,  330,  393,  418,  443,  468,  335,  337,  599,  498,
-      502,  510,  518,  526,  534,  542,  547,  552,  560,  564,
-      572,  577,  579,  581,  586,  590,  592
+      285,  141,  135,  289,  608,  294,  298,  314,  124,   95,
+      302,  102,  608,  608,  608,  307,  321,  326,  334,  338,
+      343,   29,   12,  324,  344,  608,  608,  346,  368,  608,
+      608,  330,  393,  418,  443,  468,  335,  337,  608,  497,
+      501,  510,  519,  528,  537,  546,  551,  557,  566,  570,
+      579,  584,  586,  588,  594,  598,  600
     } ;
 
 static const flex_int16_t yy_def[158] =
@@ -455,7 +454,7 @@ static const flex_int16_t yy_def[158] =
       149,  139,  139,  139,  139,  139,  139,  139,  150,  141,
       151,  139,  139,  139,  139,  142,  142,  143,  144,  145,
       146,  152,  139,  139,  139,  139,  139,  148,  139,  139,
-      139,  139,  139,  139,  149,  153,  154,  151,  151,  139,
+      139,  139,  139,  139,  149,  153,  154,  151,  139,  139,
 
       139,  139,  139,  142,  139,  139,  139,  139,  139,  139,
       139,  139,  139,  139,  139,  139,  139,  139,  139,  139,
@@ -465,7 +464,7 @@ static const flex_int16_t yy_def[158] =
       139,  139,  139,  139,  139,  139,  139
     } ;
 
-static const flex_int16_t yy_nxt[635] =
+static const flex_int16_t yy_nxt[644] =
     {   0,
        10,   11,   12,   13,   14,   14,   14,   14,   15,   16,
        16,   16,   16,   10,   17,   14,   14,   14,   14,   18,
@@ -502,13 +501,13 @@ static const flex_int16_t yy_nxt[635] =
 
       124,  124,  107,  108,  108,  108,  108,  125,  125,  125,
       125,  111,  111,  111,  111,  117,  118,  118,  118,  118,
-       99,   77,  107,  108,  108,  108,  108,  115,   82,   82,
-      128,  128,  128,  128,  117,  118,  118,  118,  118,  114,
+      115,   77,  107,  108,  108,  108,  108,  114,   82,   82,
+      128,  128,  128,  128,  117,  118,  118,  118,  118,  110,
        96,   96,  120,  121,  121,  121,  121,  129,  129,  129,
       129,  120,  121,  121,  121,  121,  133,  134,   82,   82,
-       96,   96,  133,  134,  110,   97,   97,  133,  134,  133,
-      134,  109,  105,   77,   99,   97,   97,  129,  129,  129,
-      129,   77,   75,   74,   61,   50,   55,   42,  139,  139,
+       96,   96,  133,  134,  109,   97,   97,  133,  134,  133,
+      134,  105,   77,   99,   77,   97,   97,  129,  129,  129,
+      129,   75,   74,   61,   50,   55,   42,  139,  139,  139,
        97,   97,  139,  139,  139,  139,  139,  139,  139,  139,
 
        97,   97,  135,  135,  135,  135,  139,  139,  139,  139,
@@ -523,23 +522,24 @@ static const flex_int16_t yy_nxt[635] =
       139,  139,  139,  139,  139,  139,  139,  139,  139,  139,
 
       133,  134,   58,  139,  139,   58,   70,   70,   70,   70,
-       76,  139,   76,   76,   76,   76,   76,   76,   78,   78,
-      139,   78,   78,   78,   78,   78,   79,   79,  139,   79,
-       79,   79,   79,   79,   80,   80,  139,   80,   80,   80,
-       80,   80,   81,   81,  139,   81,   81,   81,   81,   81,
-       87,   87,   88,   88,  139,   88,   88,   88,   88,   88,
-       95,   95,  139,   95,   95,   95,   95,   95,   69,   69,
-       69,   69,   98,  139,   98,   98,   98,   98,   98,   98,
-      108,  108,  118,  118,  121,  121,  132,  139,  132,  132,
-      132,  132,  132,  132,  125,  125,  128,  128,    9,  139,
+       76,  139,   76,   76,   76,   76,   76,   76,   76,   78,
+       78,   78,  139,   78,   78,   78,   78,   78,   79,   79,
+       79,  139,   79,   79,   79,   79,   79,   80,   80,   80,
+      139,   80,   80,   80,   80,   80,   81,   81,   81,  139,
+       81,   81,   81,   81,   81,   87,   87,   88,   88,   88,
+      139,   88,   88,   88,   88,   88,   95,   95,   95,  139,
+       95,   95,   95,   95,   95,   69,   69,   69,   69,   98,
+       98,  139,   98,   98,   98,   98,   98,   98,  108,  108,
+      118,  118,  121,  121,  132,  139,  132,  132,  132,  132,
 
+      132,  132,  132,  125,  125,  128,  128,    9,  139,  139,
       139,  139,  139,  139,  139,  139,  139,  139,  139,  139,
       139,  139,  139,  139,  139,  139,  139,  139,  139,  139,
       139,  139,  139,  139,  139,  139,  139,  139,  139,  139,
-      139,  139,  139,  139
+      139,  139,  139
     } ;
 
-static const flex_int16_t yy_chk[635] =
+static const flex_int16_t yy_chk[644] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -571,18 +571,18 @@ static const flex_int16_t yy_chk[635] =
        73,   73,   73,   73,   74,   74,   74,   74,   75,   75,
        77,   77,   77,   77,   82,   82,   85,   85,   85,   85,
        85,   86,   86,   86,   86,   87,   87,   87,   87,   87,
-       91,   91,   99,   77,   92,   92,   96,   96,   97,   97,
+       91,   91,   98,   77,   92,   92,   96,   96,   97,   97,
       100,  100,  100,  100,  101,  101,  101,  101,  104,  104,
 
       104,  104,  106,  106,  106,  106,  106,  107,  107,  107,
       107,  111,  111,  111,  111,  116,  116,  116,  116,  116,
-       98,  104,  108,  108,  108,  108,  108,   94,  108,  108,
-      117,  117,  117,  117,  118,  118,  118,  118,  118,   93,
+       94,  104,  108,  108,  108,  108,  108,   93,  108,  108,
+      117,  117,  117,  117,  118,  118,  118,  118,  118,   84,
       118,  118,  119,  119,  119,  119,  119,  120,  120,  120,
       120,  121,  121,  121,  121,  121,  124,  124,  125,  125,
-      128,  128,  132,  132,   84,  121,  121,  137,  137,  138,
-      138,   83,   80,   76,   71,  121,  121,  129,  129,  129,
-      129,   42,   41,   39,   26,   25,   22,   18,    9,    0,
+      128,  128,  132,  132,   83,  121,  121,  137,  137,  138,
+      138,   80,   76,   71,   42,  121,  121,  129,  129,  129,
+      129,   41,   39,   26,   25,   22,   18,    9,    0,    0,
       129,  129,    0,    0,    0,    0,    0,    0,    0,    0,
 
       129,  129,  133,  133,  133,  133,    0,    0,    0,    0,
@@ -597,20 +597,21 @@ static const flex_int16_t yy_chk[635] =
         0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
 
       136,  136,  140,    0,    0,  140,  141,  141,  141,  141,
-      142,    0,  142,  142,  142,  142,  142,  142,  143,  143,
-        0,  143,  143,  143,  143,  143,  144,  144,    0,  144,
-      144,  144,  144,  144,  145,  145,    0,  145,  145,  145,
-      145,  145,  146,  146,    0,  146,  146,  146,  146,  146,
-      147,  147,  148,  148,    0,  148,  148,  148,  148,  148,
-      149,  149,    0,  149,  149,  149,  149,  149,  150,  150,
-      150,  150,  151,    0,  151,  151,  151,  151,  151,  151,
-      152,  152,  153,  153,  154,  154,  155,    0,  155,  155,
-      155,  155,  155,  155,  156,  156,  157,  157,  139,  139,
+      142,    0,  142,  142,  142,  142,  142,  142,  142,  143,
+      143,  143,    0,  143,  143,  143,  143,  143,  144,  144,
+      144,    0,  144,  144,  144,  144,  144,  145,  145,  145,
+        0,  145,  145,  145,  145,  145,  146,  146,  146,    0,
+      146,  146,  146,  146,  146,  147,  147,  148,  148,  148,
+        0,  148,  148,  148,  148,  148,  149,  149,  149,    0,
+      149,  149,  149,  149,  149,  150,  150,  150,  150,  151,
+      151,    0,  151,  151,  151,  151,  151,  151,  152,  152,
+      153,  153,  154,  154,  155,    0,  155,  155,  155,  155,
 
+      155,  155,  155,  156,  156,  157,  157,  139,  139,  139,
       139,  139,  139,  139,  139,  139,  139,  139,  139,  139,
       139,  139,  139,  139,  139,  139,  139,  139,  139,  139,
       139,  139,  139,  139,  139,  139,  139,  139,  139,  139,
-      139,  139,  139,  139
+      139,  139,  139
     } ;
 
 static yy_state_type yy_last_accepting_state;
@@ -636,8 +637,6 @@ char *yytext;
 #include "./gerber.h"
 #include "gerber_bison.h"
 
-/* Отключить предупреждение о неиспользуемых функциях */
-#pragma GCC diagnostic ignored "-Wunused-function"
 
 #define YY_DECL 	int yylex(Gerber *g)
 
@@ -660,7 +659,7 @@ void numberAfterChar(const char * str, char c, double *data, double multiplier=1
 	if (endptr == str) return;
 	*data = x * multiplier;
 }
-#line 663 "gerber_flex.cc"
+#line 662 "lex.yy.c"
 /* A condition when extracting aperture macro names
  * The AMblock condition is required so send arithmatic operators  '+', '-', 'X' and '/' to the parser
  * The ADblock condition is required to send modifier delimeter character 'X' to the parser 
@@ -671,13 +670,7 @@ void numberAfterChar(const char * str, char c, double *data, double multiplier=1
  IJ[^*]*						{	g->layerName = yytext[2]; return PARAMETER; 	} 		// Image Justify
  *
  */
-/* ------------------------------------------------------------------------------------------------------------------
- *							token rules for RS274X file
- * Примечание: Правило <AMblock,INITIAL>\$[0-9]+\=.*\* игнорирует некорректные присваивания 
- * переменным (например, $1=$1-$2*) в Gerber-файлах.
- * Обрабатывает все выражения с переменными, не соответствующие стандарту RS-274X.
- */
-#line 680 "gerber_flex.cc"
+#line 673 "lex.yy.c"
 
 #define INITIAL 0
 #define ADblock 1
@@ -740,6 +733,8 @@ extern int yywrap ( void );
 #endif
 
 #ifndef YY_NO_UNPUT
+    
+    static void yyunput ( int c, char *buf_ptr  );
     
 #endif
 
@@ -905,9 +900,9 @@ YY_DECL
 		}
 
 	{
-#line 64 "gerber_flex.ll"
+#line 53 "gerber_flex.ll"
 
-#line 910 "gerber_flex.cc"
+#line 905 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -940,7 +935,7 @@ yy_match:
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + yy_c];
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 599 );
+		while ( yy_base[yy_current_state] != 608 );
 
 yy_find_action:
 		yy_act = yy_accept[yy_current_state];
@@ -966,36 +961,37 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 65 "gerber_flex.ll"
+#line 54 "gerber_flex.ll"
 { }										// root out all white spaces, CR
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 66 "gerber_flex.ll"
+#line 55 "gerber_flex.ll"
 {	g->currentLine++;					// count the LF and hide from parser
 							}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 68 "gerber_flex.ll"
-{
-								g->warning("Ignoring variable assignment: %s", yytext); 
-								return '*';    // Общее правило для игнорирования любых присваиваний переменным
-							}		
-	YY_BREAK
-case 4:
-YY_RULE_SETUP
-#line 73 "gerber_flex.ll"
+#line 57 "gerber_flex.ll"
 {				// get floating point number, and extract extranous '.' followed by digits.
 								yylval.YS_float   = atof(yytext);	// Evaluate number but ignore '+' or '-' prefix as it handler in yylex()
 								if (strchr(yytext,'.') != strrchr(yytext,'.') )  g->warning("extraneous '.' in number");
 								return NUMBER;
 							}
 	YY_BREAK
+case 4:
+/* rule 4 can match eol */
+YY_RULE_SETUP
+#line 63 "gerber_flex.ll"
+{
+    g->warning("Ignoring variable expression: %s", yytext); 
+    return CODE;
+							}
+	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 78 "gerber_flex.ll"
+#line 67 "gerber_flex.ll"
 {
 								yylval.YS_int  = atoi(yytext+1)-1;		// $n Variables identifiers
 								if (yylval.YS_int < 0 ) throw string("variable placeholder must be >= 1");
@@ -1004,7 +1000,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 83 "gerber_flex.ll"
+#line 72 "gerber_flex.ll"
 {	yy_push_state(macroname);				// AM paramater syntax
 								BEGIN(AMblock);							// goto <AMblock> condition, exits on next '%' tocken, see below
 								yy_push_state(macroname);
@@ -1013,7 +1009,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 88 "gerber_flex.ll"
+#line 77 "gerber_flex.ll"
 {	yylval.YS_int = atoi(yytext+3);		// ADD paramater syntax (return D code in value)
 								BEGIN(ADblock);					// goto <ADblock> condition, exits on next '*' tocken, see below
 								yy_push_state(macroname);
@@ -1022,7 +1018,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 93 "gerber_flex.ll"
+#line 82 "gerber_flex.ll"
 {								// a string of the Aperture macro name
 								g->temporaryNameMacro = yytext;				// save string
 								yy_pop_state();
@@ -1031,7 +1027,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 98 "gerber_flex.ll"
+#line 87 "gerber_flex.ll"
 {  							// FS Format Statement
 								(strchr( yytext,'L') == 0 ) ? g->isOmitLeadingZeroes = false : g->isOmitLeadingZeroes = true;
 								(strchr( yytext,'A') == 0 ) ? g->isCoordsAbsolute = false : g->isCoordsAbsolute = true;
@@ -1045,7 +1041,7 @@ YY_RULE_SETUP
 case 10:
 /* rule 10 can match eol */
 YY_RULE_SETUP
-#line 107 "gerber_flex.ll"
+#line 96 "gerber_flex.ll"
 {															// IF, Include file.  Don't return to parser
 								yytext[yyleng-1]=0;			// remove trailing '*'
 								yyin = fopen(yytext+2,"r");
@@ -1056,17 +1052,17 @@ YY_RULE_SETUP
 case 11:
 /* rule 11 can match eol */
 YY_RULE_SETUP
-#line 113 "gerber_flex.ll"
+#line 102 "gerber_flex.ll"
 {	return CODE; }											// G04 command. Skip remainder of data block.
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 114 "gerber_flex.ll"
+#line 103 "gerber_flex.ll"
 {	g->isAxisSwapped = false; return PARAMETER; }			// Axis Swap
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 115 "gerber_flex.ll"
+#line 104 "gerber_flex.ll"
 {	g->isAxisSwapped = true;
 								g->warning("Ignoring AS (Axis Swap) parameter. A axis = X data, B axis = Y data.");
 								return PARAMETER;
@@ -1074,7 +1070,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 119 "gerber_flex.ll"
+#line 108 "gerber_flex.ll"
 {
 //							cout << "\nlast SR block "<<g->repeat.buffer<<"\n";
 							g->repeat.I = 0;
@@ -1093,47 +1089,47 @@ YY_RULE_SETUP
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 135 "gerber_flex.ll"
+#line 124 "gerber_flex.ll"
 {	return PARAMETER; 	}									// ignores empty AD parameter blocks
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 136 "gerber_flex.ll"
+#line 125 "gerber_flex.ll"
 {	throw string(yytext)+" KO Knockout parameter not supported";  }	// Reason is becuase the standard does not define KO properly
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 137 "gerber_flex.ll"
+#line 126 "gerber_flex.ll"
 { 	g->layerPolarityClear = false;  return PARAMETER; }		// Layer Polarity (draw dark)
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 138 "gerber_flex.ll"
+#line 127 "gerber_flex.ll"
 { 	g->layerPolarityClear = true; return PARAMETER; }		// Layer Polarity (draw clear)
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 139 "gerber_flex.ll"
+#line 128 "gerber_flex.ll"
 {	g->imagePolarityDark = true; return PARAMETER; }		// Image Polarity set to dark
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 140 "gerber_flex.ll"
+#line 129 "gerber_flex.ll"
 {	g->imagePolarityDark = false; return PARAMETER; }		// Image Polarity set to clear
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 141 "gerber_flex.ll"
+#line 130 "gerber_flex.ll"
 { 	g->units = Gerber::INCH;  return PARAMETER; }  					// assign dimensions in inches 
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 142 "gerber_flex.ll"
+#line 131 "gerber_flex.ll"
 { 	g->units = Gerber::MILLIMETER; return PARAMETER; }				// assign dimensions in millimetres
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 143 "gerber_flex.ll"
+#line 132 "gerber_flex.ll"
 {	bool preA = g->isMirrorAaxis;							// specify mirroring of A axis and/or B axis
 								bool preB = g->isMirrorBaxis;
 								if (strstr(yytext, "A0") != 0) g->isMirrorAaxis = false;
@@ -1147,7 +1143,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 153 "gerber_flex.ll"
+#line 142 "gerber_flex.ll"
 {   int i = atoi(yytext+1);
 								if (i == 2 ) { 	g->loadDefaults(); return '*'; }		// M2 reset Gerber parameters and continue reading
 								if (i == 3 ) return 0;									// M3 stop reading program
@@ -1157,27 +1153,27 @@ YY_RULE_SETUP
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 159 "gerber_flex.ll"
+#line 148 "gerber_flex.ll"
 {  	g->X = g->getCoordinate(yytext+1, 0); return CODE; }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 160 "gerber_flex.ll"
+#line 149 "gerber_flex.ll"
 {  	g->Y = g->getCoordinate(yytext+1, 1); return CODE; }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 161 "gerber_flex.ll"
+#line 150 "gerber_flex.ll"
 {  	g->I = g->getCoordinate(yytext+1, 0, true); return CODE; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 162 "gerber_flex.ll"
+#line 151 "gerber_flex.ll"
 {  	g->J = g->getCoordinate(yytext+1, 1, true); return CODE; }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 163 "gerber_flex.ll"
+#line 152 "gerber_flex.ll"
 {														// Image Offset (treat OF and IO synonymously as RS273X Standard doesn't define)
 								numberAfterChar(yytext, 'A', &g->imageOffsetPixels[0], g->dotsPerUnit() );
 								numberAfterChar(yytext, 'B', &g->imageOffsetPixels[1], g->dotsPerUnit() );
@@ -1186,7 +1182,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 168 "gerber_flex.ll"
+#line 157 "gerber_flex.ll"
 {														// Scale Factor
 								numberAfterChar(yytext, 'A', &g->scaleFactor[0], g->optScaleX * (g->isMirrorAaxis ? -1 : 1) );
 								numberAfterChar(yytext, 'B', &g->scaleFactor[1], g->optScaleY * (g->isMirrorBaxis ? -1 : 1) );
@@ -1195,58 +1191,58 @@ YY_RULE_SETUP
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 174 "gerber_flex.ll"
+#line 163 "gerber_flex.ll"
 {	g->imageRotate = -atof(yytext+2)*M_PI/180.0; return PARAMETER; }	// Image Rotate about origin in degreese
 	YY_BREAK
 case 32:
 /* rule 32 can match eol */
 YY_RULE_SETUP
-#line 175 "gerber_flex.ll"
+#line 164 "gerber_flex.ll"
 {	g->layerName = yytext[2]; return PARAMETER; 	}		// Layer Name
 	YY_BREAK
 case 33:
 /* rule 33 can match eol */
 YY_RULE_SETUP
-#line 176 "gerber_flex.ll"
+#line 165 "gerber_flex.ll"
 {	g->imageName = yytext[2]; return PARAMETER; 	}		// Image Name
 	YY_BREAK
 case 34:
 /* rule 34 can match eol */
 YY_RULE_SETUP
-#line 177 "gerber_flex.ll"
+#line 166 "gerber_flex.ll"
 {	g->imageFilm = yytext[2]; return PARAMETER; 	}		// Image Film string for the operator 
 	YY_BREAK
 case 35:
 /* rule 35 can match eol */
 YY_RULE_SETUP
-#line 178 "gerber_flex.ll"
+#line 167 "gerber_flex.ll"
 {	g->warning("ignoring parameter '%c%c'",yytext[0],yytext[1]); return PARAMETER; 	}									// safely ignore all these parameters
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 179 "gerber_flex.ll"
+#line 168 "gerber_flex.ll"
 {	BEGIN(0); return yytext[0]; }							// '%' causes to exit AM blocks (note: '*' does not and must not end AM blocks)
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 180 "gerber_flex.ll"
+#line 169 "gerber_flex.ll"
 {	BEGIN(0); return yytext[0]; }							// '*' causes to exit AD blocks (possible subsequent AD blocks before '%')
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 181 "gerber_flex.ll"
+#line 170 "gerber_flex.ll"
 {	return toupper(yytext[0]); }							// return all other valid single characters
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 182 "gerber_flex.ll"
+#line 171 "gerber_flex.ll"
 { }															// ignore all invalid characters
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(ADblock):
 case YY_STATE_EOF(AMblock):
 case YY_STATE_EOF(macroname):
-#line 183 "gerber_flex.ll"
+#line 172 "gerber_flex.ll"
 {
 								yypop_buffer_state();
 								if ( !YY_CURRENT_BUFFER )
@@ -1257,10 +1253,10 @@ case YY_STATE_EOF(macroname):
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 191 "gerber_flex.ll"
+#line 180 "gerber_flex.ll"
 ECHO;
 	YY_BREAK
-#line 1263 "gerber_flex.cc"
+#line 1259 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -1593,6 +1589,43 @@ static int yy_get_next_buffer (void)
 }
 
 #ifndef YY_NO_UNPUT
+
+    static void yyunput (int c, char * yy_bp )
+{
+	char *yy_cp;
+    
+    yy_cp = (yy_c_buf_p);
+
+	/* undo effects of setting up yytext */
+	*yy_cp = (yy_hold_char);
+
+	if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
+		{ /* need to shift things up to make room */
+		/* +2 for EOB chars. */
+		int number_to_move = (yy_n_chars) + 2;
+		char *dest = &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[
+					YY_CURRENT_BUFFER_LVALUE->yy_buf_size + 2];
+		char *source =
+				&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move];
+
+		while ( source > YY_CURRENT_BUFFER_LVALUE->yy_ch_buf )
+			*--dest = *--source;
+
+		yy_cp += (int) (dest - source);
+		yy_bp += (int) (dest - source);
+		YY_CURRENT_BUFFER_LVALUE->yy_n_chars =
+			(yy_n_chars) = (int) YY_CURRENT_BUFFER_LVALUE->yy_buf_size;
+
+		if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
+			YY_FATAL_ERROR( "flex scanner push-back overflow" );
+		}
+
+	*--yy_cp = (char) c;
+
+	(yytext_ptr) = yy_bp;
+	(yy_hold_char) = *yy_cp;
+	(yy_c_buf_p) = yy_cp;
+}
 
 #endif
 
@@ -2272,7 +2305,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 191 "gerber_flex.ll"
+#line 180 "gerber_flex.ll"
 
 
 

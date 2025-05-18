@@ -7,6 +7,8 @@
 #include "./gerber.h"
 #include "gerber_bison.h"
 
+/* Отключить предупреждение о неиспользуемых функциях */
+#pragma GCC diagnostic ignored "-Wunused-function"
 
 #define YY_DECL 	int yylex(Gerber *g)
 
@@ -35,6 +37,7 @@ void numberAfterChar(const char * str, char c, double *data, double multiplier=1
 %option 	stack
 %option 	noyywrap
 %option 	posix-compat
+%option 	nounput      
 
 /* A condition when extracting aperture macro names
  * The AMblock condition is required so send arithmatic operators  '+', '-', 'X' and '/' to the parser
@@ -50,10 +53,23 @@ void numberAfterChar(const char * str, char c, double *data, double multiplier=1
  IJ[^*]*						{	g->layerName = yytext[2]; return PARAMETER; 	} 		// Image Justify
  *
  */
+
+/* ------------------------------------------------------------------------------------------------------------------
+ *							token rules for RS274X file
+ * Примечание: Правило <AMblock,INITIAL>\$[0-9]+\=.*\* игнорирует некорректные присваивания 
+ * переменным (например, $1=$1-$2*) в Gerber-файлах.
+ * Обрабатывает все выражения с переменными, не соответствующие стандарту RS-274X.
+ */
+
 %%
 <*>[ \t\r]						{ }										// root out all white spaces, CR
 <*>\n							{	g->currentLine++;					// count the LF and hide from parser
 							}
+<AMblock,INITIAL>\$[0-9]+\=.*\*		{
+								g->warning("Ignoring variable assignment: %s", yytext); 
+								return '*';    // Общее правило для игнорирования любых присваиваний переменным
+							}		
+
 <INITIAL,ADblock,AMblock>[0-9]*\.?[0-9]+\.?[0-9]*	{				// get floating point number, and extract extranous '.' followed by digits.
 								yylval.YS_float   = atof(yytext);	// Evaluate number but ignore '+' or '-' prefix as it handler in yylex()
 								if (strchr(yytext,'.') != strrchr(yytext,'.') )  g->warning("extraneous '.' in number");
