@@ -27,7 +27,6 @@ int __stdcall processGerber(
     bool optBoarderUnitsMillimeters, // Флаг: единицы измерения границы в миллиметрах
     double optBoarder,           // Размер границы (в DPI или мм в зависимости от флага)
     bool optInvertPolarity,      // Инвертировать полярность
-    unsigned rowsPerStrip,       // Количество строк в одной полосе TIFF
     double optGrowSize,          // Размер роста (в DPI или мм в зависимости от флага)
     double optScaleX,            // Масштаб по оси X
     double optScaleY,            // Масштаб по оси Y
@@ -65,7 +64,6 @@ int __stdcall processExcellon(
     bool optBoarderUnitsMillimeters, // Флаг: единицы измерения границы в миллиметрах
     double optBoarder,           // Размер границы (в DPI или мм в зависимости от флага)
     bool optInvertPolarity,      // Инвертировать полярность
-    unsigned rowsPerStrip,       // Количество строк в одной полосе TIFF
     double optGrowSize,          // Размер роста отверстий (в DPI или мм)
     double optScaleX,            // Масштаб по оси X
     double optScaleY,            // Масштаб по оси Y
@@ -109,14 +107,14 @@ gerb2img = ctypes.WinDLL("gerb2img.dll")
 processGerber = gerb2img.processGerber
 processGerber.argtypes = [
     ctypes.c_double, ctypes.c_bool, ctypes.c_bool, ctypes.c_double,
-    ctypes.c_bool, ctypes.c_uint, ctypes.c_double, ctypes.c_double,
+    ctypes.c_bool, ctypes.c_double, ctypes.c_double,
     ctypes.c_double, ctypes.c_char_p, ctypes.c_char_p
 ]
 processGerber.restype = ctypes.c_int
 
 # Вызов функции для Gerber
 result = processGerber(
-    2400.0, False, False, 0.0, False, 512, 0.0, 1.0, 1.0,
+    2400.0, False, False, 0.0, False, 0.0, 1.0, 1.0,
     b"output.bmp", b"example.gbr"
 )
 
@@ -129,14 +127,14 @@ else:
 processExcellon = gerb2img.processExcellon
 processExcellon.argtypes = [
     ctypes.c_double, ctypes.c_bool, ctypes.c_bool, ctypes.c_double,
-    ctypes.c_bool, ctypes.c_uint, ctypes.c_double, ctypes.c_double,
+    ctypes.c_bool, ctypes.c_double, ctypes.c_double,
     ctypes.c_double, ctypes.c_char_p, ctypes.c_char_p
 ]
 processExcellon.restype = ctypes.c_int
 
 # Вызов функции для Excellon
 result = processExcellon(
-    2400.0, False, False, 0.0, False, 512, 0.0, 1.0, 1.0,
+    2400.0, False, False, 0.0, False, 0.0, 1.0, 1.0,
     b"drill_output.bmp", b"example.drl"
 )
 
@@ -180,15 +178,29 @@ uses
 
 type
   TProcessGerber = function(
-    DPI: Double; Invert: Boolean; Mirror: Boolean; Rotation: Double;
-    AddBorder: Boolean; BorderSize: Cardinal; ScaleX, ScaleY, OffsetX: Double;
-    OutputFile, InputFile: PAnsiChar
+    imageDPI: Double; 
+    optGrowUnitsMillimeters: Boolean;
+    optBoarderUnitsMillimeters: Boolean;
+    optBoarder: Double;
+    optInvertPolarity: Boolean;
+    optGrowSize: Double;
+    optScaleX: Double;
+    optScaleY: Double;
+    outputFilename: PAnsiChar;
+    inputFilename: PAnsiChar
   ): Integer; stdcall;
 
   TProcessExcellon = function(
-    DPI: Double; Invert: Boolean; Mirror: Boolean; Rotation: Double;
-    AddBorder: Boolean; BorderSize: Cardinal; ScaleX, ScaleY, OffsetX: Double;
-    OutputFile, InputFile: PAnsiChar
+    imageDPI: Double;
+    optGrowUnitsMillimeters: Boolean;
+    optBoarderUnitsMillimeters: Boolean;
+    optBoarder: Double;
+    optInvertPolarity: Boolean;
+    optGrowSize: Double;
+    optScaleX: Double;
+    optScaleY: Double;
+    outputFilename: PAnsiChar;
+    inputFilename: PAnsiChar
   ): Integer; stdcall;
 
 var
@@ -210,13 +222,13 @@ begin
     raise Exception.Create('Не удалось найти функцию processExcellon');
 
   try
-    if ProcessGerber(2400.0, False, False, 0.0, False, 512, 0.0, 1.0, 1.0,
+    if ProcessGerber(2400.0, False, False, 0.0, False, 0.0, 1.0, 1.0,
       'output.bmp', 'example.gbr') = 0 then
       Writeln('Конвертация Gerber успешна!')
     else
       Writeln('Ошибка конвертации Gerber!');
 
-    if ProcessExcellon(2400.0, False, False, 0.0, False, 512, 0.0, 1.0, 1.0,
+    if ProcessExcellon(2400.0, False, False, 0.0, False, 0.0, 1.0, 1.0,
       'drill_output.bmp', 'example.drl') = 0 then
       Writeln('Конвертация Excellon успешна!')
     else
