@@ -24,6 +24,7 @@ using json = nlohmann::json;
 #include "polygon.h"
 #include "apertures.h"
 #include "gerber.h"
+#include "excellon.h" // Добавлен include для Excellon
 #include "tiffio.h"
 #include "EasyBMP/EasyBMP.h"
 #include "error_codes.h"
@@ -166,7 +167,6 @@ extern "C" __declspec(dllexport) int __stdcall processGerber(
 	bool optBoarderUnitsMillimeters,
 	double optBoarder,
 	bool optInvertPolarity,
-	unsigned rowsPerStrip,
 	double optGrowSize,
 	double optScaleX,
 	double optScaleY,
@@ -181,21 +181,6 @@ extern "C" __declspec(dllexport) int __stdcall processGerber(
 		{
 			return ERROR_INVALID_PARAMETERS; // код ошибки: некорректные параметры
 		}
-
-		// Логирование входных параметров
-		std::ostringstream paramsLog;
-		paramsLog << "Called processGerber with parameters:\n"
-				  << "imageDPI: " << imageDPI << "\n"
-				  << "optGrowUnitsMillimeters: " << (optGrowUnitsMillimeters ? "true" : "false") << "\n"
-				  << "optBoarderUnitsMillimeters: " << (optBoarderUnitsMillimeters ? "true" : "false") << "\n"
-				  << "optBoarder: " << optBoarder << "\n"
-				  << "optInvertPolarity: " << (optInvertPolarity ? "true" : "false") << "\n"
-				  << "rowsPerStrip: " << rowsPerStrip << "\n"
-				  << "optGrowSize: " << optGrowSize << "\n"
-				  << "optScaleX: " << optScaleX << "\n"
-				  << "optScaleY: " << optScaleY << "\n"
-				  << "outputFilename: " << (outputFilename ? outputFilename : "null") << "\n"
-				  << "inputFilename: " << (inputFilename ? inputFilename : "null");
 
 		// Нормализация путей
 		std::string normalizedOutputFilename = normalizePathToDoubleBackslashes(outputFilename);
@@ -384,7 +369,7 @@ extern "C" __declspec(dllexport) int __stdcall processGerber(
 				if ((pol == DARK) && !isPolarityDark)
 					pol = CLEAR;
 				if ((pol == CLEAR) && isPolarityDark)
-					pol = DARK;
+				pol = DARK;
 
 				int sliCount;
 				int *sliTable;
@@ -548,7 +533,10 @@ extern "C" __declspec(dllexport) int __stdcall processGerberJSON(const char *jso
 		bool optBoarderUnitsMillimeters = j.value("optBoarderUnitsMillimeters", false);
 		double optBoarder = j.value("optBoarder", 0.0);
 		bool optInvertPolarity = j.value("optInvertPolarity", false);
-		unsigned rowsPerStrip = j.value("rowsPerStrip", 512);
+		
+		// Количество строк в одной полосе при формировании TIFF-файла
+		// Используем фиксированное значение из глобальной переменной
+		
 		double optGrowSize = j.value("optGrowSize", 0.0);
 		double optScaleX = j.value("optScaleX", 1.0);
 		double optScaleY = j.value("optScaleY", 1.0);
@@ -562,7 +550,402 @@ extern "C" __declspec(dllexport) int __stdcall processGerberJSON(const char *jso
 			optBoarderUnitsMillimeters,
 			optBoarder,
 			optInvertPolarity,
-			rowsPerStrip,
+			optGrowSize,
+			optScaleX,
+			optScaleY,
+			outputFilename.c_str(),
+			inputFilename.c_str());
+	}
+	catch (const std::exception &e)
+	{
+		std::cerr << "Error processing JSON: " << e.what() << std::endl;
+		return ERROR_JSON_PROCESSING; // код ошибки: ошибка обработки JSON
+	}
+}
+
+//**********************************************************
+// Функция для обработки Excellon файлов (формат сверловки плат)
+//**********************************************************
+extern "C" __declspec(dllexport) int __stdcall processExcellon(
+	double imageDPI,
+	bool optGrowUnitsMillimeters,
+	bool optBoarderUnitsMillimeters,
+	double optBoarder,
+	bool optInvertPolarity,
+	double optGrowSize,
+	double optScaleX,
+	double optScaleY,
+	const char *outputFilename,
+	const char *inputFilename)
+{
+	try
+	{
+		clock_t start_time = std::clock(); // Начало измерения времени
+
+		if (!outputFilename || !inputFilename)
+		{
+			return ERROR_INVALID_PARAMETERS; // код ошибки: некорректные параметры
+		}
+
+		// Нормализация путей
+		std::string normalizedOutputFilename = normalizePathToDoubleBackslashes(outputFilename);
+		std::string normalizedInputFilename = normalizePathToDoubleBackslashes(inputFilename);
+
+		if (normalizedOutputFilename.empty() || normalizedInputFilename.empty())
+		{
+			return ERROR_INVALID_PARAMETERS; // код ошибки: некорректные параметры
+		}
+
+		// Проверка входного файла
+		FILE *file = fopen(normalizedInputFilename.c_str(), "rb");
+		if (file == NULL)
+		{
+			return ERROR_FILE_OPEN_FAILED;
+		}
+
+		// Проверяем, является ли файл форматом Excellon/Drill
+		if (!Excellon::isExcellonFile(file)) 
+		{
+			fclose(file);
+			std::cerr << "Error: The file is not recognized as an Excellon/Drill format." << std::endl;
+			return ERROR_EXCELLON_PROCESSING; // код ошибки: ошибка обработки Excellon
+		}
+
+		if (normalizedOutputFilename.empty())
+			normalizedOutputFilename = normalizedInputFilename + ".tiff";
+
+		std::ostringstream excellonParamsLog;
+		excellonParamsLog << "file: " << normalizedInputFilename << "\n"
+						<< "imageDPI: " << imageDPI << "\n"
+						<< "optGrowSize: " << optGrowSize << "\n"
+						<< "optScaleX: " << optScaleX << "\n"
+						<< "optScaleY: " << optScaleY;
+
+		// Создаем объект Excellon для обработки файла сверловки
+		std::list<Excellon *> excellonList;
+		try
+		{
+			excellonList.push_back(new Excellon(file, imageDPI, optGrowSize, optScaleX, optScaleY));
+		}
+		catch (const std::exception &e)
+		{
+			fclose(file);
+			return ERROR_EXCELLON_PROCESSING; // код ошибки: ошибка обработки Excellon
+		}
+		catch (...)
+		{
+			fclose(file);
+			return ERROR_EXCELLON_PROCESSING; // код ошибки: ошибка обработки Excellon
+		}
+		fclose(file);
+
+		// Вывод предупреждений
+		for (std::size_t i = 0; i < excellonList.back()->messages.size(); i++)
+		{
+			if (i == 0)
+				std::cout << "\n";
+			std::cout << "(" << normalizedInputFilename << ") " << excellonList.back()->messages[i] << std::endl;
+		}
+
+		// Вывод ошибок
+		if (excellonList.back()->isError)
+		{
+			return ERROR_EXCELLON_PROCESSING; // код ошибки: ошибка обработки Excellon
+		}
+
+		// Создание таблицы для подсчета битов (если ещё не создана)
+		static bool nbitsTableInitialized = false;
+		if (!nbitsTableInitialized)
+		{
+			for (int i = 0; i < 256; i++)
+			{
+				nbitsTable[i] = 0;
+				if ((i & 0x01)) nbitsTable[i]++;
+				if ((i & 0x02)) nbitsTable[i]++;
+				if ((i & 0x04)) nbitsTable[i]++;
+				if ((i & 0x08)) nbitsTable[i]++;
+				if ((i & 0x10)) nbitsTable[i]++;
+				if ((i & 0x20)) nbitsTable[i]++;
+				if ((i & 0x40)) nbitsTable[i]++;
+				if ((i & 0x80)) nbitsTable[i]++;
+			}
+			nbitsTableInitialized = true;
+		}
+
+		if (imageDPI < 1 || optBoarder < 0)
+		{
+			std::cerr << "Error: invalid DPI or border parameters." << std::endl;
+			return ERROR_INVALID_PARAMETERS; // код ошибки: некорректные параметры
+		}
+
+		// Корректировка единиц измерения
+		if (optGrowUnitsMillimeters)
+			optGrowSize *= imageDPI / 25.4;
+		if (optBoarderUnitsMillimeters)
+			optBoarder *= imageDPI / 25.4;
+
+		int miny = INT_MAX; // Минимальные и максимальные координаты для отверстий
+		int minx = INT_MAX;
+		int maxy = INT_MIN;
+		int maxx = INT_MIN;
+		std::list<Polygon> globalPolygons; // Полигоны, созданные для всех отверстий
+
+		// Объединение полигонов из всех Excellon файлов
+		for (std::list<Excellon *>::iterator it = excellonList.begin(); it != excellonList.end(); it++)
+		{
+			globalPolygons.merge((*it)->polygons);
+		}
+
+		if (globalPolygons.size() == 0)
+		{ // Если нет полигонов, завершаем с ошибкой
+			return ERROR_NO_IMAGE; // код ошибки: нет изображения
+		}
+
+		// Находим крайние координаты для всех полигонов
+		for (std::list<Polygon>::iterator it = globalPolygons.begin(); it != globalPolygons.end(); it++)
+		{
+			it->initialise(); // Инициализируем полигон, если ещё не инициализирован
+			
+			if (minx > it->pixelMinX)
+				minx = it->pixelMinX;
+			if (maxx < it->pixelMaxX)
+				maxx = it->pixelMaxX;
+			if (miny > it->pixelMinY)
+				miny = it->pixelMinY;
+			if (maxy < it->pixelMaxY)
+				maxy = it->pixelMaxY;
+		}
+
+		// Определяем размеры области изображения
+		unsigned imageWidth = unsigned(std::ceil((maxx - minx) + 2 * optBoarder + 1));
+		unsigned imageHeight = unsigned(std::ceil((maxy - miny) + 2 * optBoarder + 1));
+		int xOffset = int(std::floor(optBoarder));
+		int yOffset = xOffset;
+
+		bool isPolarityDark = true;
+		isPolarityDark = (optInvertPolarity ^ excellonList.front()->imagePolarityDark);
+		if (rowsPerStrip > static_cast<unsigned>(imageHeight) || rowsPerStrip == 0)
+		{
+			rowsPerStrip = imageHeight;
+		}
+
+		// Проверяем формат выходного файла (BMP или TIFF)
+		std::string outputLower = normalizedOutputFilename;
+		std::transform(outputLower.begin(), outputLower.end(), outputLower.begin(), ::tolower);
+		bool isBMP = (outputLower.find(".bmp") != std::string::npos);
+
+		if (isBMP)
+		{
+			// Создаем BMP с использованием EasyBMP
+			BMP output;
+			output.SetSize(imageWidth, imageHeight);
+			output.SetBitDepth(1); // Монохромный BMP
+
+			// Устанавливаем DPI информацию
+			output.SetDPI(int(imageDPI), int(imageDPI));
+
+			// Цвета для пикселей
+			RGBApixel white;
+			white.Red = white.Green = white.Blue = white.Alpha = 255;
+			RGBApixel black;
+			black.Red = black.Green = black.Blue = black.Alpha = 0;
+
+			// Заполняем фон в зависимости от полярности
+			for (unsigned y = 0; y < imageHeight; y++)
+			{
+				for (unsigned x = 0; x < imageWidth; x++)
+				{
+					output.SetPixel(x, y, isPolarityDark ? white : black);
+				}
+			}
+
+			// Рисуем полигоны отверстий
+			xOffset -= minx;
+			for (std::list<Polygon>::iterator it = globalPolygons.begin(); it != globalPolygons.end(); it++)
+			{
+				Polarity_t pol = it->polarity;
+				if ((pol == DARK) && !isPolarityDark)
+					pol = CLEAR;
+				if ((pol == CLEAR) && isPolarityDark)
+				pol = DARK;
+
+				int sliCount;
+				int *sliTable;
+				for (int y = it->pixelMinY; y <= it->pixelMaxY; y++)
+				{
+					it->getNextLineX1X2Pairs(sliTable, sliCount);
+					for (int i = 0; i < sliCount; i += 2)
+					{
+						for (int x = xOffset + it->pixelOffsetX + sliTable[i];
+							 x <= xOffset + it->pixelOffsetX + sliTable[i + 1];
+							 x++)
+						{
+							if (x >= 0 && x < (int)imageWidth &&
+								(y - miny + yOffset) >= 0 &&
+								(y - miny + yOffset) < (int)imageHeight)
+							{
+								output.SetPixel(x, y - miny + yOffset,
+												(pol == DARK) ? black : white);
+							}
+						}
+					}
+				}
+			}
+
+			// Записываем BMP файл
+			if (!output.WriteToFile(normalizedOutputFilename.c_str()))
+			{
+				return ERROR_OUTPUT_FILE_CREATION; // код ошибки: ошибка создания выходного файла
+			}
+		}
+		else
+		{
+			// По умолчанию создаем TIFF файл
+			TIFF *tif = TIFFOpen(normalizedOutputFilename.c_str(), "w");
+			if (tif == NULL)
+			{
+				return ERROR_OUTPUT_FILE_CREATION; // код ошибки: ошибка создания выходного файла
+			}
+
+			// Настраиваем TIFF параметры
+			TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+			TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISWHITE);
+			TIFFSetField(tif, TIFFTAG_COMPRESSION, COMPRESSION_CCITTRLE);
+			TIFFSetField(tif, TIFFTAG_IMAGELENGTH, imageHeight);
+			TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, imageWidth);
+			TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT, 2); // Единицы измерения - дюймы
+			TIFFSetField(tif, TIFFTAG_YRESOLUTION, imageDPI);
+			TIFFSetField(tif, TIFFTAG_XRESOLUTION, imageDPI);
+			TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, rowsPerStrip);
+
+			// Рассчитываем размер буфера для рисования
+			bytesPerScanline = ((imageWidth + 7) >> 3);
+			bitmapBytes = bytesPerScanline * rowsPerStrip;
+			bitmap = (unsigned char *)std::malloc(bitmapBytes);
+			if (bitmap == 0)
+			{
+				std::cerr << "Error: memory allocation failed." << std::endl;
+				return ERROR_MEMORY_ALLOCATION; // код ошибки: ошибка выделения памяти
+			}
+
+			// Рисуем полигоны отверстий
+			xOffset -= minx;
+
+			int stripCounter = 0;
+			std::list<Polygon>::iterator polyIterator = globalPolygons.begin();
+			std::list<PolygonReference> activePolys;
+
+			// Проходим по полосам изображения
+			for (int ystart = miny - yOffset; ystart < (int(imageHeight) + miny - yOffset); ystart += rowsPerStrip)
+			{
+				// Очищаем буфер в зависимости от полярности
+				if (isPolarityDark)
+					memset(bitmap, 0x00, bitmapBytes);
+				else
+					memset(bitmap, 0xff, bitmapBytes);
+
+				unsigned char *bufferLine = bitmap;
+
+				// Проходим по каждой строке в полосе
+				for (int y = ystart; (y - ystart) < static_cast<int>(rowsPerStrip) && (y <= maxy); y++, bufferLine += bytesPerScanline)
+				{
+					while (polyIterator != globalPolygons.end() && y == (polyIterator->pixelMinY))
+					{
+						activePolys.push_back(PolygonReference());
+						activePolys.back().polygon = &(*polyIterator);
+						activePolys.sort();
+						polyIterator++;
+					}
+
+					for (std::list<PolygonReference>::iterator it = activePolys.begin(); it != activePolys.end();)
+					{
+						if (y > it->polygon->pixelMaxY)
+						{
+							it = activePolys.erase(it);
+							continue;
+						}
+
+						int sliCount;
+						int *sliTable;
+						it->polygon->getNextLineX1X2Pairs(sliTable, sliCount);
+
+						Polarity_t pol = it->polygon->polarity;
+						if ((pol == DARK) && !isPolarityDark)
+							pol = CLEAR;
+						if ((pol == CLEAR) && isPolarityDark)
+							pol = DARK;
+
+						for (int i = 0; i < sliCount; i += 2)
+						{
+							horizontalLine(xOffset + it->polygon->pixelOffsetX + sliTable[i],
+										   xOffset + it->polygon->pixelOffsetX + sliTable[i + 1],
+										   bufferLine, pol);
+						}
+						it++;
+					}
+				}
+
+				// Записываем полосу в TIFF файл
+				unsigned lines = std::min(rowsPerStrip, imageHeight - rowsPerStrip * stripCounter);
+				TIFFWriteEncodedStrip(tif, stripCounter++, bitmap, bytesPerScanline * lines);
+			}
+
+			TIFFClose(tif);
+			std::free(bitmap);
+		}
+
+		// Освобождаем ресурсы
+		for (std::list<Excellon *>::iterator it = excellonList.begin(); it != excellonList.end(); it++)
+		{
+			delete *it;
+		}
+
+		double elapsed_time = static_cast<double>(std::clock() - start_time) / CLOCKS_PER_SEC;
+		std::cout << "Processing time: " << elapsed_time << " seconds." << std::endl;
+
+		return NO_ERROR;
+	}
+	catch (const std::exception &e)
+	{
+		return ERROR_UNKNOWN; // код ошибки: неизвестная ошибка
+	}
+	catch (...)
+	{
+		return ERROR_UNKNOWN; // код ошибки: неизвестная ошибка
+	}
+}
+
+extern "C" __declspec(dllexport) int __stdcall processExcellonJSON(const char *jsonParams)
+{
+	try
+	{
+		// Десериализация JSON в параметры
+		json j = json::parse(jsonParams);
+
+		double imageDPI = j.value("imageDPI", 2400.0);
+		bool optGrowUnitsMillimeters = j.value("optGrowUnitsMillimeters", false);
+		bool optBoarderUnitsMillimeters = j.value("optBoarderUnitsMillimeters", false);
+		double optBoarder = j.value("optBoarder", 0.0);
+		bool optInvertPolarity = j.value("optInvertPolarity", false);	
+		// Параметр увеличения размера отверстий в Excellon-файле (в дюймах или мм)
+		// Позволяет компенсировать технологические особенности производства:
+		// - Положительные значения увеличивают диаметр отверстий
+		// - Отрицательные значения уменьшают диаметр отверстий
+		// - Нулевое значение оставляет размеры без изменений
+		double optGrowSize = j.value("optGrowSize", 0.0);
+		
+		double optScaleX = j.value("optScaleX", 1.0);
+		double optScaleY = j.value("optScaleY", 1.0);
+		std::string outputFilename = j.value("outputFilename", "");
+		std::string inputFilename = j.value("inputFilename", "");
+
+		// Вызов основного процесса
+		return processExcellon(
+			imageDPI,
+			optGrowUnitsMillimeters,
+			optBoarderUnitsMillimeters,
+			optBoarder,
+			optInvertPolarity,
 			optGrowSize,
 			optScaleX,
 			optScaleY,

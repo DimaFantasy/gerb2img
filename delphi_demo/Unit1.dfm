@@ -73,6 +73,24 @@ object Form1: TForm1
       TabOrder = 3
       Text = ''
     end
+    object ButtonProcessExcellon: TButton
+      Left = 633
+      Top = 7
+      Width = 113
+      Height = 25
+      Caption = 'ProcessExcellon'
+      TabOrder = 4
+      OnClick = ButtonProcessExcellonClick
+    end
+    object ButtonProcessExcellonJSON: TButton
+      Left = 514
+      Top = 7
+      Width = 113
+      Height = 25
+      Caption = 'ProcessExcellonJSON'
+      TabOrder = 5
+      OnClick = ButtonProcessExcellonJSONClick
+    end
   end
   object OpenDialog1: TOpenDialog
     Filter = 'Gerber|*.gbr|All|*.*'

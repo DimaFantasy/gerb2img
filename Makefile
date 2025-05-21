@@ -57,6 +57,7 @@ SRCS_DLL := \
     apertures.cpp \
     gerber.cpp \
     polygon.cpp \
+    excellon.cpp \
     gerber_bison.cc \
     gerber_flex.cc \
     EasyBMP/EasyBMP.cpp
@@ -66,6 +67,7 @@ SRCS_EXE := \
     apertures.cpp \
     gerber.cpp \
     polygon.cpp \
+    excellon.cpp \
     gerber_bison.cc \
     gerber_flex.cc \
     EasyBMP/EasyBMP.cpp

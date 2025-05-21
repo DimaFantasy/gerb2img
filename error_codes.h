@@ -12,6 +12,8 @@
 #define ERROR_MEMORY_ALLOCATION 6    // Ошибка выделения памяти
 #define ERROR_OUTPUT_FILE_CREATION 7 // Ошибка создания выходного файла
 #define ERROR_JSON_PROCESSING 8      // Ошибка обработки JSON
+#define ERROR_EXCELLON_PROCESSING 9  // Ошибка обработки Excellon
+#define ERROR_NOT_IMPLEMENTED 10     // Функциональность не реализована
 
 #define ERROR_UNKNOWN 9999 // Неизвестная ошибка
 

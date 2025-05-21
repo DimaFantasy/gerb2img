@@ -1,4 +1,4 @@
-unit Unit1;
+п»їunit Unit1;
 
 interface
 
@@ -16,9 +16,13 @@ type
     ButtonProcessGerber: TButton;
     CheckBoxDebug: TCheckBox;
     MaskEditDpi: TMaskEdit;
+    ButtonProcessExcellon: TButton;
+    ButtonProcessExcellonJSON: TButton;
     procedure ButtonprocessGerberJSONClick(Sender: TObject);
     procedure ButtonProcessGerberClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure ButtonProcessExcellonClick(Sender: TObject);
+    procedure ButtonProcessExcellonJSONClick(Sender: TObject);
   private
     function GetErrorMessageByCode(code: Integer): string;
     function GetImageDPI: Double;
@@ -42,15 +46,14 @@ const
   GerberDebugDll = 'gerb2img_x32_debug.dll';
 {$ENDIF}
 
-// === ПСЕВДОНИМЫ ДЛЯ ФУНКЦИЙ В ЗАВИСИМОСТИ ОТ DLL ===
+// === Р¤СѓРЅРєС†РёРё РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё Gerber (СЂРµР»РёР·) ===
 
-// Для обычной библиотеки
+// РџСЂРѕС†РµСЃСЃ РѕР±СЂР°Р±РѕС‚РєРё Gerber
 function processGerberRelease(imageDPI: Double;
                               optGrowUnitsMillimeters: Boolean;
                               optBoarderUnitsMillimeters: Boolean;
                               optBoarder: Double;
                               optInvertPolarity: Boolean;
-                              rowsPerStrip: Cardinal;
                               optGrowSize: Double;
                               optScaleX: Double;
                               optScaleY: Double;
@@ -61,13 +64,12 @@ function processGerberRelease(imageDPI: Double;
 function processGerberJSONRelease(const json: PAnsiChar): Integer; stdcall;
                               external GerberDll name 'processGerberJSON';
 
-// Для отладочной библиотеки
+// === Р¤СѓРЅРєС†РёРё РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё Gerber (РѕС‚Р»Р°РґРєР°) ===
 function processGerberDebug(imageDPI: Double;
                             optGrowUnitsMillimeters: Boolean;
                             optBoarderUnitsMillimeters: Boolean;
                             optBoarder: Double;
                             optInvertPolarity: Boolean;
-                            rowsPerStrip: Cardinal;
                             optGrowSize: Double;
                             optScaleX: Double;
                             optScaleY: Double;
@@ -78,7 +80,39 @@ function processGerberDebug(imageDPI: Double;
 function processGerberJSONDebug(const json: PAnsiChar): Integer; stdcall;
                             external GerberDebugDll name 'processGerberJSON';
 
-// === ПОЛУЧЕНИЕ DPI ===
+// === Р¤СѓРЅРєС†РёРё РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё Excellon (СЂРµР»РёР·) ===
+function processExcellonRelease(imageDPI: Double;
+                             optGrowUnitsMillimeters: Boolean;
+                             optBoarderUnitsMillimeters: Boolean;
+                             optBoarder: Double;
+                             optInvertPolarity: Boolean;
+                             optGrowSize: Double;
+                             optScaleX: Double;
+                             optScaleY: Double;
+                             outputFilename: PAnsiChar;
+                             inputFilename: PAnsiChar): Integer; stdcall;
+                             external GerberDll name 'processExcellon';
+
+function processExcellonJSONRelease(const json: PAnsiChar): Integer; stdcall;
+                             external GerberDll name 'processExcellonJSON';
+
+// === Р¤СѓРЅРєС†РёРё РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё Excellon (РѕС‚Р»Р°РґРєР°) ===
+function processExcellonDebug(imageDPI: Double;
+                           optGrowUnitsMillimeters: Boolean;
+                           optBoarderUnitsMillimeters: Boolean;
+                           optBoarder: Double;
+                           optInvertPolarity: Boolean;
+                           optGrowSize: Double;
+                           optScaleX: Double;
+                           optScaleY: Double;
+                           outputFilename: PAnsiChar;
+                           inputFilename: PAnsiChar): Integer; stdcall;
+                           external GerberDebugDll name 'processExcellon';
+
+function processExcellonJSONDebug(const json: PAnsiChar): Integer; stdcall;
+                           external GerberDebugDll name 'processExcellonJSON';
+
+// === РџРѕР»СѓС‡РµРЅРёРµ DPI ===
 function TForm1.GetImageDPI: Double;
 begin
   if TryStrToFloat(MaskEditDpi.Text, Result) then
@@ -89,26 +123,28 @@ begin
     Result := 1024;
 end;
 
-// === КОД ОШИБКИ ===
+// === РљРѕРґ РѕС€РёР±РєРё ===
 function TForm1.GetErrorMessageByCode(code: Integer): string;
 begin
   case code of
-    0:    Result := 'Успешно.';
-    2:    Result := 'Невозможно открыть файл.';
-    3:    Result := 'Ошибка обработки Gerber.';
-    4:    Result := 'Некорректные параметры.';
-    5:    Result := 'Нет изображения для обработки.';
-    6:    Result := 'Ошибка выделения памяти.';
-    7:    Result := 'Ошибка создания выходного файла.';
-    8:    Result := 'Ошибка обработки JSON.';
-    9999: Result := 'Неизвестная ошибка.';
+    0:    Result := 'РЈСЃРїРµС€РЅРѕ.';
+    2:    Result := 'РќРµРІРѕР·РјРѕР¶РЅРѕ РѕС‚РєСЂС‹С‚СЊ С„Р°Р№Р».';
+    3:    Result := 'РћС€РёР±РєР° РѕР±СЂР°Р±РѕС‚РєРё Gerber.';
+    4:    Result := 'РќРµРєРѕСЂСЂРµРєС‚РЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹.';
+    5:    Result := 'РќРµС‚ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё.';
+    6:    Result := 'РћС€РёР±РєР° РІС‹РґРµР»РµРЅРёСЏ РїР°РјСЏС‚Рё.';
+    7:    Result := 'РћС€РёР±РєР° СЃРѕР·РґР°РЅРёСЏ РІС‹С…РѕРґРЅРѕРіРѕ С„Р°Р№Р»Р°.';
+    8:    Result := 'РћС€РёР±РєР° РѕР±СЂР°Р±РѕС‚РєРё JSON.';
+    9:    Result := 'РћС€РёР±РєР° РѕР±СЂР°Р±РѕС‚РєРё Excellon.';
+    10:   Result := 'Р¤СѓРЅРєС†РёРѕРЅР°Р»СЊРЅРѕСЃС‚СЊ РЅРµ СЂРµР°Р»РёР·РѕРІР°РЅР°.';
+    9999: Result := 'РќРµРёР·РІРµСЃС‚РЅР°СЏ РѕС€РёР±РєР°.';
   else
-    Result := 'Неизвестная ошибка.';
+    Result := 'РќРµРёР·РІРµСЃС‚РЅР°СЏ РѕС€РёР±РєР°.';
   end;
-  Result := Result + ' (Код: ' + IntToStr(code) + ')';
+  Result := Result + ' (РєРѕРґ: ' + IntToStr(code) + ')';
 end;
 
-// === ОБРАБОТКА Gerber (обычная) ===
+// === РћР±СЂР°Р±РѕС‚РєР° Gerber (РєРЅРѕРїРєР°) ===
 procedure TForm1.ButtonProcessGerberClick(Sender: TObject);
 var
   inputFilePath, outputFilePath: string;
@@ -119,14 +155,14 @@ begin
     inputFilePath := OpenDialog1.FileName;
     outputFilePath := 'OUTPUT.bmp';
 
-    // Устанавливаем курсор в режим "ожидание"
+    // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РєСѓСЂСЃРѕСЂ РІ С„РѕСЂРјСѓ "РїРµСЃРѕС‡РЅС‹Рµ С‡Р°СЃС‹"
     Screen.Cursor := crHourGlass;
 
     try
       if CheckBoxDebug.Checked then
       begin
         resultCode := processGerberDebug(
-          GetImageDPI, False, False, 0, False, 512, 0, 1, 1,
+          GetImageDPI, False, False, 0, False, 0, 1, 1,
           PAnsiChar(AnsiString(outputFilePath)),
           PAnsiChar(AnsiString(inputFilePath))
         );
@@ -134,7 +170,7 @@ begin
       else
       begin
         resultCode := processGerberRelease(
-          GetImageDPI, False, False, 0, False, 512, 0, 1, 1,
+          GetImageDPI, False, False, 0, False, 0, 1, 1,
           PAnsiChar(AnsiString(outputFilePath)),
           PAnsiChar(AnsiString(inputFilePath))
         );
@@ -143,20 +179,20 @@ begin
       if resultCode = 0 then
       begin
         Image1.Picture.LoadFromFile(outputFilePath);
-        ShowMessage('Конвертация успешно завершена!');
+        ShowMessage('РР·РѕР±СЂР°Р¶РµРЅРёРµ СѓСЃРїРµС€РЅРѕ РѕР±СЂР°Р±РѕС‚Р°РЅРѕ!');
       end
       else
       begin
         ShowMessage(GetErrorMessageByCode(resultCode));
       end;
     finally
-      // Возвращаем курсор в исходное состояние
+      // Р’РѕР·РІСЂР°С‰Р°РµРј РєСѓСЂСЃРѕСЂ Рє РѕР±С‹С‡РЅРѕРјСѓ СЃРѕСЃС‚РѕСЏРЅРёСЋ
       Screen.Cursor := crDefault;
     end;
   end;
 end;
 
-// === ОБРАБОТКА Gerber через JSON ===
+// === РћР±СЂР°Р±РѕС‚РєР° Gerber С‡РµСЂРµР· JSON ===
 procedure TForm1.ButtonprocessGerberJSONClick(Sender: TObject);
 var
   jsonString, inputFilePath, escapedInputPath, outputFilePath: string;
@@ -173,7 +209,7 @@ begin
                   '  "optGrowUnitsMillimeters": false,' + sLineBreak +
                   '  "optBoarderUnitsMillimeters": false,' + sLineBreak +
                   '  "optBoarder": 0,' + sLineBreak +
-                  '  "optInvertPolarity": true,' + sLineBreak +
+                  '  "optInvertPolarity": false,' + sLineBreak +
                   '  "rowsPerStrip": 512,' + sLineBreak +
                   '  "optGrowSize": 0,' + sLineBreak +
                   '  "optScaleX": 1,' + sLineBreak +
@@ -182,7 +218,7 @@ begin
                   '  "inputFilename": "' + escapedInputPath + '"' + sLineBreak +
                   '}';
 
-    // Устанавливаем курсор в режим "ожидание"
+    // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РєСѓСЂСЃРѕСЂ РІ С„РѕСЂРјСѓ "РїРµСЃРѕС‡РЅС‹Рµ С‡Р°СЃС‹"
     Screen.Cursor := crHourGlass;
 
     try
@@ -194,19 +230,116 @@ begin
       if resultCode = 0 then
       begin
         Image1.Picture.LoadFromFile(outputFilePath);
-        ShowMessage('Конвертация успешно завершена!');
+        ShowMessage('РР·РѕР±СЂР°Р¶РµРЅРёРµ СѓСЃРїРµС€РЅРѕ РѕР±СЂР°Р±РѕС‚Р°РЅРѕ!');
       end
       else
       begin
         ShowMessage(GetErrorMessageByCode(resultCode));
       end;
     finally
-      // Возвращаем курсор в исходное состояние
+      // Р’РѕР·РІСЂР°С‰Р°РµРј РєСѓСЂСЃРѕСЂ Рє РѕР±С‹С‡РЅРѕРјСѓ СЃРѕСЃС‚РѕСЏРЅРёСЋ
       Screen.Cursor := crDefault;
     end;
   end;
 end;
 
+// === РћР±СЂР°Р±РѕС‚РєР° Excellon (РєРЅРѕРїРєР°) ===
+procedure TForm1.ButtonProcessExcellonClick(Sender: TObject);
+var
+  inputFilePath, outputFilePath: string;
+  resultCode: Integer;
+begin
+  if OpenDialog1.Execute then
+  begin
+    inputFilePath := OpenDialog1.FileName;
+    outputFilePath := 'OUTPUT.bmp';
+
+    // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РєСѓСЂСЃРѕСЂ РІ С„РѕСЂРјСѓ "РїРµСЃРѕС‡РЅС‹Рµ С‡Р°СЃС‹"
+    Screen.Cursor := crHourGlass;
+
+    try
+      if CheckBoxDebug.Checked then
+      begin
+        resultCode := processExcellonDebug(
+          GetImageDPI, False, False, 0, False, 0, 1, 1,
+          PAnsiChar(AnsiString(outputFilePath)),
+          PAnsiChar(AnsiString(inputFilePath))
+        );
+      end
+      else
+      begin
+        resultCode := processExcellonRelease(
+          GetImageDPI, False, False, 0, False, 0, 1, 1,
+          PAnsiChar(AnsiString(outputFilePath)),
+          PAnsiChar(AnsiString(inputFilePath))
+        );
+      end;
+
+      if resultCode = 0 then
+      begin
+        Image1.Picture.LoadFromFile(outputFilePath);
+        ShowMessage('РР·РѕР±СЂР°Р¶РµРЅРёРµ СѓСЃРїРµС€РЅРѕ РѕР±СЂР°Р±РѕС‚Р°РЅРѕ!');
+      end
+      else
+      begin
+        ShowMessage(GetErrorMessageByCode(resultCode));
+      end;
+    finally
+      // Р’РѕР·РІСЂР°С‰Р°РµРј РєСѓСЂСЃРѕСЂ Рє РѕР±С‹С‡РЅРѕРјСѓ СЃРѕСЃС‚РѕСЏРЅРёСЋ
+      Screen.Cursor := crDefault;
+    end;
+  end;
+end;
+
+// === РћР±СЂР°Р±РѕС‚РєР° Excellon С‡РµСЂРµР· JSON ===
+procedure TForm1.ButtonProcessExcellonJSONClick(Sender: TObject);
+var
+  jsonString, inputFilePath, escapedInputPath, outputFilePath: string;
+  resultCode: Integer;
+begin
+  if OpenDialog1.Execute then
+  begin
+    inputFilePath := OpenDialog1.FileName;
+    escapedInputPath := StringReplace(inputFilePath, '\', '\\', [rfReplaceAll]);
+    outputFilePath := 'OUTPUT.bmp';
+
+    jsonString := '{' + sLineBreak +
+                  '  "imageDPI": ' + FloatToStr(GetImageDPI) + ',' + sLineBreak +
+                  '  "optGrowUnitsMillimeters": false,' + sLineBreak +
+                  '  "optBoarderUnitsMillimeters": false,' + sLineBreak +
+                  '  "optBoarder": 0,' + sLineBreak +
+                  '  "optInvertPolarity": false,' + sLineBreak +
+                  '  "optGrowSize": 0,' + sLineBreak +
+                  '  "optScaleX": 1,' + sLineBreak +
+                  '  "optScaleY": 1,' + sLineBreak +
+                  '  "outputFilename": "' + outputFilePath + '",' + sLineBreak +
+                  '  "inputFilename": "' + escapedInputPath + '"' + sLineBreak +
+                  '}';
+
+    // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РєСѓСЂСЃРѕСЂ РІ С„РѕСЂРјСѓ "РїРµСЃРѕС‡РЅС‹Рµ С‡Р°СЃС‹"
+    Screen.Cursor := crHourGlass;
+
+    try
+      if CheckBoxDebug.Checked then
+        resultCode := processExcellonJSONDebug(PAnsiChar(AnsiString(jsonString)))
+      else
+        resultCode := processExcellonJSONRelease(PAnsiChar(AnsiString(jsonString)));
+
+      if resultCode = 0 then
+      begin
+        Image1.Picture.LoadFromFile(outputFilePath);
+        ShowMessage('РР·РѕР±СЂР°Р¶РµРЅРёРµ СѓСЃРїРµС€РЅРѕ РѕР±СЂР°Р±РѕС‚Р°РЅРѕ!');
+      end
+      else
+      begin
+        ShowMessage(GetErrorMessageByCode(resultCode));
+      end;
+    finally
+      // Р’РѕР·РІСЂР°С‰Р°РµРј РєСѓСЂСЃРѕСЂ Рє РѕР±С‹С‡РЅРѕРјСѓ СЃРѕСЃС‚РѕСЏРЅРёСЋ
+      Screen.Cursor := crDefault;
+    end;
+  end;
+end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
