@@ -262,9 +262,9 @@ extern "C" __declspec(dllexport) int __stdcall processGerber(
 			if ((i & 0x08))
 				nbitsTable[i]++;
 			if ((i & 0x10))
-				nbitsTable[i]++;
+			nbitsTable[i]++;
 			if ((i & 0x20))
-				nbitsTable[i]++;
+			nbitsTable[i]++;
 			if ((i & 0x40))
 				nbitsTable[i]++;
 			if ((i & 0x80))
@@ -321,8 +321,14 @@ extern "C" __declspec(dllexport) int __stdcall processGerber(
 		int xOffset = int(std::floor(optBoarder));
 		int yOffset = xOffset;
 
-		bool isPolarityDark = true;
-		isPolarityDark = (optInvertPolarity ^ gerbers.front()->imagePolarityDark); // polarity is relative to 1st gerber file
+		// ВАЖНО: Не инвертируем полярность из файла Gerber, вместо этого используем напрямую
+		bool isPolarityDark = gerbers.front()->imagePolarityDark; 
+
+		// Применяем invert только если это явно запрошено пользователем
+		if (optInvertPolarity) {
+			isPolarityDark = !isPolarityDark;
+		}
+		
 		if (rowsPerStrip > static_cast<unsigned>(imageHeight) || rowsPerStrip == 0)
 		{
 			rowsPerStrip = imageHeight;
@@ -352,24 +358,32 @@ extern "C" __declspec(dllexport) int __stdcall processGerber(
 			RGBApixel black;
 			black.Red = black.Green = black.Blue = black.Alpha = 0;
 
-			// Fill background based on polarity
+			// В GERBER файлах фон всегда противоположен полярности полигона:
+			// - Для DARK полигонов (основной слой платы) фон всегда БЕЛЫЙ
+			// - Для CLEAR полигонов (прорези и отверстия) фон всегда ЧЕРНЫЙ
+			// НО в BMP форматe белый = 255, черный = 0, что инвертировано по отношению к TIFF
+			// Поэтому фон всегда делаем БЕЛЫМ для начала
 			for (unsigned y = 0; y < imageHeight; y++)
 			{
 				for (unsigned x = 0; x < imageWidth; x++)
 				{
-					output.SetPixel(x, y, isPolarityDark ? white : black);
+					output.SetPixel(x, y, white);
 				}
 			}
 
 			// Draw polygons
 			xOffset -= minx;
+			// Рисуем полигоны строго последовательно, в том порядке, как они были определены в Gerber
+			// Это обеспечит правильную очередность наложения и соблюдение полярности
 			for (std::list<Polygon>::iterator it = globalPolygons.begin(); it != globalPolygons.end(); it++)
 			{
 				Polarity_t pol = it->polarity;
-				if ((pol == DARK) && !isPolarityDark)
-					pol = CLEAR;
-				if ((pol == CLEAR) && isPolarityDark)
-				pol = DARK;
+				
+				// Преобразуем полярность с учетом инверсии только если это включено пользователем
+				if (optInvertPolarity) {
+					if (pol == DARK) pol = CLEAR;
+					else if (pol == CLEAR) pol = DARK;
+				}
 
 				int sliCount;
 				int *sliTable;
@@ -750,12 +764,16 @@ extern "C" __declspec(dllexport) int __stdcall processExcellon(
 			RGBApixel black;
 			black.Red = black.Green = black.Blue = black.Alpha = 0;
 
-			// Заполняем фон в зависимости от полярности
+			// В GERBER файлах фон всегда противоположен полярности полигона:
+			// - Для DARK полигонов (основной слой платы) фон всегда БЕЛЫЙ
+			// - Для CLEAR полигонов (прорези и отверстия) фон всегда ЧЕРНЫЙ
+			// НО в BMP форматe белый = 255, черный = 0, что инвертировано по отношению к TIFF
+			// Поэтому фон всегда делаем БЕЛЫМ для начала
 			for (unsigned y = 0; y < imageHeight; y++)
 			{
 				for (unsigned x = 0; x < imageWidth; x++)
 				{
-					output.SetPixel(x, y, isPolarityDark ? white : black);
+					output.SetPixel(x, y, white);
 				}
 			}
 

@@ -478,8 +478,14 @@ int main(int argc, char **argv)
 	int xOffset = int(floor(optBoarder));
 	int yOffset = xOffset;
 
-	bool isPolarityDark = true;
-	isPolarityDark = (optInvertPolarity ^ gerbers.front()->imagePolarityDark); // polarity is relative to 1st gerber file
+	// ВАЖНО: Не инвертируем полярность из файла Gerber, вместо этого используем напрямую
+	bool isPolarityDark = gerbers.front()->imagePolarityDark; 
+
+	// Применяем invert только если это явно запрошено пользователем
+	if (optInvertPolarity) {
+		isPolarityDark = !isPolarityDark;
+	}
+	
 	if (rowsPerStrip > unsigned(imageHeight) || rowsPerStrip == 0)
 		rowsPerStrip = imageHeight;
 	unsigned darkPixelsCount = 0;
@@ -564,7 +570,8 @@ int main(int argc, char **argv)
 		unsigned char *bufferLine = bitmap;
 
 		// Loop over each row of the strip and fill with horizontal lines from the polygon raster data.
-		// All polygon are sorted in the list globalPolygons. Iterating each polygon for raster data will guarantee no missing lines.
+		// Рисуем полигоны строго последовательно, в том порядке, как они были определены в Gerber
+		// Это обеспечит правильную очередность наложения и соблюдение полярности
 		for (unsigned int y = ystart; (y - ystart) < rowsPerStrip && (y <= static_cast<unsigned int>(maxy)); y++, bufferLine += bytesPerScanline) // Исправлено: maxy -> unsigned int
 		{
 			while (polyIterator != globalPolygons.end() && y == static_cast<unsigned int>(polyIterator->pixelMinY)) // Исправлено: pixelMinY -> unsigned int
@@ -591,9 +598,16 @@ int main(int argc, char **argv)
 				//				printf("p %2d y:%d (x cnt %d) |",it->polygon->number, y, sliCount); fflush(stdout);
 
 				Polarity_t pol = it->polygon->polarity;
-				if ((pol == DARK) && !isPolarityDark)
+				
+				// Преобразуем полярность с учетом инверсии только если это включено пользователем
+				if (optInvertPolarity) {
+					if (pol == DARK) pol = CLEAR;
+					else if (pol == CLEAR) pol = DARK;
+				} 
+				// Проверка совместимости с TIFF форматом (белый фон, черные полигоны)
+				else if ((pol == DARK) && !isPolarityDark)
 					pol = CLEAR;
-				if ((pol == CLEAR) && isPolarityDark)
+				else if ((pol == CLEAR) && isPolarityDark)
 					pol = DARK;
 
 				for (int i = 0; i < sliCount; i += 2)

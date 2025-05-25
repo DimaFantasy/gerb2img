@@ -124,6 +124,10 @@ void Gerber::flashAperture(double x, double y)
 			{
 				polygons.back().polarity = CLEAR;
 			}
+			else
+			{
+				polygons.back().polarity = DARK;
+			}
 		}
 		arp = arp->composite;
 	}
@@ -417,6 +421,11 @@ void Gerber::process_G_command(int code)
 		{
 			polygons.back().polarity = CLEAR;
 		} // polygon polarity dependent on PLC / PLD parameters
+		else
+		{
+			polygons.back().polarity = DARK;
+		}
+
 	}
 
 #ifdef ENABLE_DEBUG_LOGGING
@@ -576,6 +585,10 @@ void Gerber::processDataBlock()
 					{
 						polygons.back().polarity = CLEAR;
 					} // polygon polarity dependent on PLC / PLD parameters
+					else
+					{
+						polygons.back().polarity = DARK;
+					}
 					polygons.back().vdata->add(oldX + sx, oldY + sy);
 					polygons.back().vdata->add(oldX - sx, oldY - sy);
 					polygons.back().vdata->add(X - sx, Y - sy);
@@ -603,6 +616,10 @@ void Gerber::processDataBlock()
 					{
 						polygons.back().polarity = CLEAR;
 					} // polygon polarity dependent on PLC / PLD parameters
+					else
+					{
+						polygons.back().polarity = DARK;
+					}
 					oldX = arc.stopped.x; // set oldX,oldY to stopped point of arc
 					oldY = arc.stopped.y;
 				}
@@ -850,15 +867,6 @@ Gerber::Gerber(FILE *fp_gerb, const double dotsPerInch, const double growSize, d
 
 		if (polygons.size() == 0)
 			warning("nothing to draw");
-
-		// Sort all polygons object so they have ascending miny values.
-#ifdef ENABLE_DEBUG_LOGGING
-		logFile << "[DEBUG] Sorting polygons\n";
-#endif
-		polygons.sort();
-#ifdef ENABLE_DEBUG_LOGGING
-		logFile << "[DEBUG] Polygons sorted successfully\n";
-#endif
 	}
 	catch (const string &msg)
 	{
