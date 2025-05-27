@@ -70,7 +70,8 @@ int __stdcall processExcellon(
     bool uniformDrillsMillimeters,// For uniformDrillDiameter: true - millimeters, false - inches
     double uniformDrillDiameter,  // Diameter value for all holes (if uniformDrills=true) (mm/in)
     const char *outputFilename,   // Output file name
-    const char *inputFilename     // Input Excellon file name
+    const char *inputFilename,    // Input Excellon file name
+    int *drillCount               // Pointer to variable for returning the number of drilled holes
 );
 ```
 
@@ -96,7 +97,7 @@ Accepts a JSON string with parameters:
   "inputFilename": "input.drl"
 }
 ```
-**Note:** The `optGrowSize` parameter in Excellon allows compensation for technological peculiarities in production: positive values increase hole diameter, negative values decrease it.
+**Note:** The `optGrowSize` parameter in Excellon allows compensation for technological peculiarities in production: positive values increase hole diameter, negative values decrease it. The function returns the number of processed drill holes through the special `drillCount` parameter.
 
 ## Usage Examples
 
@@ -130,20 +131,25 @@ else:
 # Defining the processExcellon function
 processExcellon = gerb2img.processExcellon
 processExcellon.argtypes = [
-    ctypes.c_double, ctypes.c_bool, ctypes.c_bool, ctypes.c_double,
+    ctypes.c_double, ctypes.c_bool, ctypes.c_double,
     ctypes.c_bool, ctypes.c_double, ctypes.c_double,
-    ctypes.c_double, ctypes.c_char_p, ctypes.c_char_p
+    ctypes.c_double, ctypes.c_bool, ctypes.c_bool,
+    ctypes.c_double, ctypes.c_char_p, ctypes.c_char_p,
+    ctypes.POINTER(ctypes.c_int)
 ]
 processExcellon.restype = ctypes.c_int
 
 # Calling the function for Excellon
+drill_count = ctypes.c_int(0)
 result = processExcellon(
-    2400.0, False, False, 0.0, False, 0.0, 1.0, 1.0,
-    b"drill_output.bmp", b"example.drl"
+    2400.0, False, 0.0, False, 0.0, 1.0, 1.0,
+    False, False, 0.0,
+    b"drill_output.bmp", b"example.drl",
+    ctypes.byref(drill_count)
 )
 
 if result == 0:
-    print("Excellon conversion successful!")
+    print(f"Excellon conversion successful! Number of drills: {drill_count.value}")
 else:
     print("Excellon conversion error!")
 
@@ -204,7 +210,8 @@ type
     optScaleX: Double;
     optScaleY: Double;
     outputFilename: PAnsiChar;
-    inputFilename: PAnsiChar
+    inputFilename: PAnsiChar;
+    drillCount: PInteger
   ): Integer; stdcall;
 
 var
@@ -232,9 +239,10 @@ begin
     else
       Writeln('Gerber conversion error!');
 
+    var drillCount: Integer;
     if ProcessExcellon(2400.0, False, False, 0.0, False, 0.0, 1.0, 1.0,
-      'drill_output.bmp', 'example.drl') = 0 then
-      Writeln('Excellon conversion successful!')
+      'drill_output.bmp', 'example.drl', @drillCount) = 0 then
+      Writeln('Excellon conversion successful! Drill count: ', drillCount)
     else
       Writeln('Excellon conversion error!');
   finally
@@ -383,7 +391,8 @@ int __stdcall processExcellon(
     bool uniformDrillsMillimeters,// Для uniformDrillDiameter: true - миллиметры, false - дюймы
     double uniformDrillDiameter,  // Значение диаметра для всех отверстий (если uniformDrills=true) (мм/дюймы)
     const char *outputFilename,   // Имя выходного файла
-    const char *inputFilename     // Имя входного Excellon-файла
+    const char *inputFilename,    // Имя входного Excellon-файла
+    int *drillCount               // Указатель на переменную для возврата количества сверловок
 );
 ```
 
@@ -409,7 +418,7 @@ int __stdcall processExcellonJSON(const char *jsonParams);
   "inputFilename": "input.drl"
 }
 ```
-**Примечание:** Параметр `optGrowSize` в Excellon позволяет компенсировать технологические особенности производства: положительные значения увеличивают диаметр отверстий, отрицательные - уменьшают.
+**Примечание:** Параметр `optGrowSize` в Excellon позволяет компенсировать технологические особенности производства: положительные значения увеличивают диаметр отверстий, отрицательные - уменьшают. Функция возвращает количество обработанных сверловок через специальный параметр `drillCount`.
 
 ## Пример использования
 
@@ -443,20 +452,25 @@ else:
 # Определение функции processExcellon
 processExcellon = gerb2img.processExcellon
 processExcellon.argtypes = [
-    ctypes.c_double, ctypes.c_bool, ctypes.c_bool, ctypes.c_double,
+    ctypes.c_double, ctypes.c_bool, ctypes.c_double,
     ctypes.c_bool, ctypes.c_double, ctypes.c_double,
-    ctypes.c_double, ctypes.c_char_p, ctypes.c_char_p
+    ctypes.c_double, ctypes.c_bool, ctypes.c_bool,
+    ctypes.c_double, ctypes.c_char_p, ctypes.c_char_p,
+    ctypes.POINTER(ctypes.c_int)
 ]
 processExcellon.restype = ctypes.c_int
 
 # Вызов функции для Excellon
+drill_count = ctypes.c_int(0)
 result = processExcellon(
-    2400.0, False, False, 0.0, False, 0.0, 1.0, 1.0,
-    b"drill_output.bmp", b"example.drl"
+    2400.0, False, 0.0, False, 0.0, 1.0, 1.0,
+    False, False, 0.0,
+    b"drill_output.bmp", b"example.drl",
+    ctypes.byref(drill_count)
 )
 
 if result == 0:
-    print("Конвертация Excellon успешна!")
+    print(f"Конвертация Excellon успешна! Количество сверловок: {drill_count.value}")
 else:
     print("Ошибка конвертации Excellon!")
 
@@ -517,7 +531,8 @@ type
     optScaleX: Double;
     optScaleY: Double;
     outputFilename: PAnsiChar;
-    inputFilename: PAnsiChar
+    inputFilename: PAnsiChar;
+    drillCount: PInteger
   ): Integer; stdcall;
 
 var
@@ -545,9 +560,10 @@ begin
     else
       Writeln('Ошибка конвертации Gerber!');
 
+    var drillCount: Integer;
     if ProcessExcellon(2400.0, False, False, 0.0, False, 0.0, 1.0, 1.0,
-      'drill_output.bmp', 'example.drl') = 0 then
-      Writeln('Конвертация Excellon успешна!')
+      'drill_output.bmp', 'example.drl', @drillCount) = 0 then
+      Writeln('Конвертация Excellon успешна! Количество сверловок: ', drillCount)
     else
       Writeln('Ошибка конвертации Excellon!');
   finally

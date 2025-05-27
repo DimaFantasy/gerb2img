@@ -590,7 +590,8 @@ extern "C" __declspec(dllexport) int __stdcall processExcellon(
     bool uniformDrillsMillimeters, // Для uniformDrillDiameter: true - миллиметры, false - дюймы
     double uniformDrillDiameter,// Значение диаметра для всех отверстий (если uniformDrills=true)
     const char *outputFilename, // Имя выходного файла
-    const char *inputFilename   // Имя входного файла Excellon
+    const char *inputFilename,   // Имя входного файла Excellon
+	int *drillCount            // Указатель на переменную для числа сверловок	
 )
 {
 	try
@@ -699,6 +700,13 @@ extern "C" __declspec(dllexport) int __stdcall processExcellon(
 			}
 			nbitsTableInitialized = true;
 		}
+
+		// Обновляем счётчик сверловок, если указатель передан
+		if (drillCount != nullptr) {
+			// Получаем количество сверловок как количество полигонов
+			*drillCount = excellonList.front()->polygons.size();
+			std::cout << "Total drill count: " << *drillCount << std::endl;
+		}		
 
 		if (imageDPI < 1 || optBoarder < 0)
 		{
@@ -954,6 +962,9 @@ extern "C" __declspec(dllexport) int __stdcall processExcellonJSON(const char *j
         // Десериализация JSON в параметры
         json j = json::parse(jsonParams);
 
+		// Создаем указатель, но не используем результат
+		int *localDrillCount = nullptr;
+
         double imageDPI = j.value("imageDPI", 2400.0);
         bool unitsMillimeters = j.value("unitsMillimeters", false);  // Объединенный параметр единиц измерения
         double optBoarder = j.value("optBoarder", 0.0);
@@ -980,7 +991,8 @@ extern "C" __declspec(dllexport) int __stdcall processExcellonJSON(const char *j
             uniformDrillsMillimeters,
             uniformDrillDiameter,
             outputFilename.c_str(),
-            inputFilename.c_str());
+            inputFilename.c_str(),
+            localDrillCount);
     }
     catch (const std::exception &e)
     {

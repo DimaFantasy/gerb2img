@@ -1,5 +1,5 @@
 EXPORTS
-    processExcellon = processExcellon@72 @1
+    processExcellon = processExcellon@76 @1
     processExcellonJSON = processExcellonJSON@4 @2
     processGerber = processGerber@60 @3
     processGerberJSON = processGerberJSON@4 @4
