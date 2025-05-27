@@ -60,15 +60,17 @@ Accepts a JSON string with parameters:
 ```c
 int __stdcall processExcellon(
     double imageDPI,              // Image resolution in DPI
-    bool optGrowUnitsMillimeters, // Flag: growth units in millimeters
-    bool optBoarderUnitsMillimeters, // Flag: border units in millimeters
-    double optBoarder,           // Border size (in DPI or mm depending on flag)
-    bool optInvertPolarity,      // Invert polarity
-    double optGrowSize,          // Hole growth size (in DPI or mm)
-    double optScaleX,            // Scale factor on X axis
-    double optScaleY,            // Scale factor on Y axis
-    const char *outputFilename,  // Output file name
-    const char *inputFilename    // Input Excellon file name
+    bool unitsMillimeters,        // Units: true - millimeters, false - pixels
+    double optBoarder,            // Border size (in mm or pixels)
+    bool optInvertPolarity,       // Invert polarity
+    double optGrowSize,           // Hole growth size (in mm or pixels)
+    double optScaleX,             // Scale factor on X axis
+    double optScaleY,             // Scale factor on Y axis
+    bool uniformDrills,           // Use uniform diameter for all holes
+    bool uniformDrillsMillimeters,// For uniformDrillDiameter: true - millimeters, false - inches
+    double uniformDrillDiameter,  // Diameter value for all holes (if uniformDrills=true) (mm/in)
+    const char *outputFilename,   // Output file name
+    const char *inputFilename     // Input Excellon file name
 );
 ```
 
@@ -81,13 +83,15 @@ Accepts a JSON string with parameters:
 ```json
 {
   "imageDPI": 2400.0,
-  "optGrowUnitsMillimeters": false,
-  "optBoarderUnitsMillimeters": false,
+  "unitsMillimeters": false,
   "optBoarder": 0.0,
   "optInvertPolarity": false,
-  "optGrowSize": 0.0, 
+  "optGrowSize": 0.0,
   "optScaleX": 1.0,
   "optScaleY": 1.0,
+  "uniformDrills": false,
+  "uniformDrillsMillimeters": false,
+  "uniformDrillDiameter": 0.0,
   "outputFilename": "drill_output.bmp",
   "inputFilename": "input.drl"
 }
@@ -369,15 +373,17 @@ int __stdcall processGerberJSON(const char *jsonParams);
 ```c
 int __stdcall processExcellon(
     double imageDPI,              // Разрешение изображения в DPI
-    bool optGrowUnitsMillimeters, // Флаг: единицы измерения роста в миллиметрах
-    bool optBoarderUnitsMillimeters, // Флаг: единицы измерения границы в миллиметрах
-    double optBoarder,           // Размер границы (в DPI или мм в зависимости от флага)
-    bool optInvertPolarity,      // Инвертировать полярность
-    double optGrowSize,          // Размер роста отверстий (в DPI или мм)
-    double optScaleX,            // Масштаб по оси X
-    double optScaleY,            // Масштаб по оси Y
-    const char *outputFilename,  // Имя выходного файла
-    const char *inputFilename    // Имя входного Excellon-файла
+    bool unitsMillimeters,        // Единицы измерения: true - миллиметры, false - пиксели
+    double optBoarder,            // Размер отступа от края изображения (в мм или пикселях)
+    bool optInvertPolarity,       // Инвертировать полярность
+    double optGrowSize,           // Размер роста отверстий (в мм или пикселях)
+    double optScaleX,             // Масштаб по оси X
+    double optScaleY,             // Масштаб по оси Y
+    bool uniformDrills,           // Использовать одинаковый диаметр для всех отверстий
+    bool uniformDrillsMillimeters,// Для uniformDrillDiameter: true - миллиметры, false - дюймы
+    double uniformDrillDiameter,  // Значение диаметра для всех отверстий (если uniformDrills=true) (мм/дюймы)
+    const char *outputFilename,   // Имя выходного файла
+    const char *inputFilename     // Имя входного Excellon-файла
 );
 ```
 
@@ -390,13 +396,15 @@ int __stdcall processExcellonJSON(const char *jsonParams);
 ```json
 {
   "imageDPI": 2400.0,
-  "optGrowUnitsMillimeters": false,
-  "optBoarderUnitsMillimeters": false,
+  "unitsMillimeters": false,
   "optBoarder": 0.0,
   "optInvertPolarity": false,
-  "optGrowSize": 0.0, 
+  "optGrowSize": 0.0,
   "optScaleX": 1.0,
   "optScaleY": 1.0,
+  "uniformDrills": false,
+  "uniformDrillsMillimeters": false,
+  "uniformDrillDiameter": 0.0,
   "outputFilename": "drill_output.bmp",
   "inputFilename": "input.drl"
 }
@@ -615,4 +623,3 @@ end.
 - Добавление поддержки формата BMP для EXE.
 - Улучшение производительности и функциональности.
 - Расширение документации и примеров использования.
-
