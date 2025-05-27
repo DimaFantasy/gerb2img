@@ -1,4 +1,3 @@
-//
 // This file is distributed under the terms of the GNU General Public License v3.
 
 #ifndef EXCELLON_H_
@@ -31,6 +30,7 @@ private:
     const double growSize;       // Размер для увеличения полигонов
     const double optScaleX;      // Масштабирование по оси X
     const double optScaleY;      // Масштабирование по оси Y
+    const double uniformDrillDiameter; // Значение диаметра для всех отверстий (если > 0)
 
     // Перечисление для единиц измерения
     typedef enum {MILLIMETER, INCH, UNDEFINED} Units_t;
@@ -96,9 +96,12 @@ public:
      * @param growSize Размер для увеличения полигонов
      * @param optScaleX Масштабирование по оси X
      * @param optScaleY Масштабирование по оси Y
+     * @param uniformDrillDiameter Если > 0, использовать этот диаметр для всех отверстий
+     * @param uniformDrillInMillimeters Указывает, задан ли uniformDrillDiameter в миллиметрах (true) или дюймах (false)
      */
     Excellon(FILE* fp_excellon, const double dotsPerInch, const double growSize, 
-            double optScaleX, double optScaleY);
+            double optScaleX, double optScaleY, double uniformDrillDiameter = 0, 
+            bool uniformDrillInMillimeters = false);
     
     /**
      * @brief Деструктор класса

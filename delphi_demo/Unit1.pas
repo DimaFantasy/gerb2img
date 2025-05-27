@@ -18,14 +18,58 @@ type
     MaskEditDpi: TMaskEdit;
     ButtonProcessExcellon: TButton;
     ButtonProcessExcellonJSON: TButton;
+    GroupBox1: TGroupBox;
+    GerberCheckBoxInvertPolarity: TCheckBox;
+    GerberEditScaleX: TEdit;
+    GerberLabelScaleX: TLabel;
+    GerberLabelScale: TLabel;
+    GerberEditScaleY: TEdit;
+    Edit1: TEdit;
+    GerberCheckBoxBorderMillimeters: TCheckBox;
+    GerberEditGrowSize: TEdit;
+    GerberCheckBoxGrowMillimeters: TCheckBox;
+    GroupBox2: TGroupBox;
+    ExcellonCheckBoxInvertPolarity: TCheckBox;
+    ExcellonLabelScaleX: TLabel;
+    ExcellonEditScaleX: TEdit;
+    ExcellonLabelScaleY: TLabel;
+    ExcellonEditScaleY: TEdit;
+    ExcellonCheckBoxUnitsMillimeters: TCheckBox;
+    ExcellonLabelBorder: TLabel;
+    ExcellonEditBorder: TEdit;
+    ExcellonLabelGrowSize: TLabel;
+    ExcellonEditGrowSize: TEdit;
+    ExcellonCheckBoxUniformDrills: TCheckBox;
+    ExcellonCheckBoxUniformDrillsMillimeters: TCheckBox;
+    ExcellonEditUniformDrillDiameter: TEdit;
     procedure ButtonprocessGerberJSONClick(Sender: TObject);
     procedure ButtonProcessGerberClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure ButtonProcessExcellonClick(Sender: TObject);
     procedure ButtonProcessExcellonJSONClick(Sender: TObject);
+    procedure Panel3Click(Sender: TObject);
+    procedure ExcellonEditGrowSizeChange(Sender: TObject);
   private
     function GetErrorMessageByCode(code: Integer): string;
     function GetImageDPI: Double;
+    // Герберовские функции получения параметров
+    function GetGerberScaleX: Double;
+    function GetGerberScaleY: Double;
+    function GetGerberBorder: Double;
+    function GetGerberGrowSize: Double;
+    function GetGerberBorderMillimeters: Boolean;
+    function GetGerberGrowMillimeters: Boolean;
+    function GetGerberInvertPolarity: Boolean;
+    // Экселлоновские функции получения параметров
+    function GetExcellonScaleX: Double;
+    function GetExcellonScaleY: Double;
+    function GetExcellonBorder: Double;
+    function GetExcellonGrowSize: Double;
+    function GetExcellonUnitsMillimeters: Boolean;
+    function GetExcellonInvertPolarity: Boolean;
+    function GetExcellonUniformDrills: Boolean;
+    function GetExcellonUniformDrillsMillimeters: Boolean;
+    function GetExcellonUniformDrillDiameter: Double;
   public
   end;
 
@@ -82,13 +126,15 @@ function processGerberJSONDebug(const json: PAnsiChar): Integer; stdcall;
 
 // === Функции для обработки Excellon (релиз) ===
 function processExcellonRelease(imageDPI: Double;
-                             optGrowUnitsMillimeters: Boolean;
-                             optBoarderUnitsMillimeters: Boolean;
+                             unitsMillimeters: Boolean;
                              optBoarder: Double;
                              optInvertPolarity: Boolean;
                              optGrowSize: Double;
                              optScaleX: Double;
                              optScaleY: Double;
+                             uniformDrills: Boolean;
+                             uniformDrillsMillimeters: Boolean;
+                             uniformDrillDiameter: Double;
                              outputFilename: PAnsiChar;
                              inputFilename: PAnsiChar): Integer; stdcall;
                              external GerberDll name 'processExcellon';
@@ -98,13 +144,15 @@ function processExcellonJSONRelease(const json: PAnsiChar): Integer; stdcall;
 
 // === Функции для обработки Excellon (отладка) ===
 function processExcellonDebug(imageDPI: Double;
-                           optGrowUnitsMillimeters: Boolean;
-                           optBoarderUnitsMillimeters: Boolean;
+                           unitsMillimeters: Boolean;
                            optBoarder: Double;
                            optInvertPolarity: Boolean;
                            optGrowSize: Double;
                            optScaleX: Double;
                            optScaleY: Double;
+                           uniformDrills: Boolean;
+                           uniformDrillsMillimeters: Boolean;
+                           uniformDrillDiameter: Double;
                            outputFilename: PAnsiChar;
                            inputFilename: PAnsiChar): Integer; stdcall;
                            external GerberDebugDll name 'processExcellon';
@@ -121,6 +169,11 @@ begin
   end
   else
     Result := 1024;
+end;
+
+procedure TForm1.Panel3Click(Sender: TObject);
+begin
+
 end;
 
 // === Код ошибки ===
@@ -162,7 +215,14 @@ begin
       if CheckBoxDebug.Checked then
       begin
         resultCode := processGerberDebug(
-          GetImageDPI, False, False, 0, False, 0, 1, 1,
+          GetImageDPI, 
+          GetGerberGrowMillimeters, 
+          GetGerberBorderMillimeters, 
+          GetGerberBorder, 
+          GetGerberInvertPolarity, 
+          GetGerberGrowSize, 
+          GetGerberScaleX, 
+          GetGerberScaleY,
           PAnsiChar(AnsiString(outputFilePath)),
           PAnsiChar(AnsiString(inputFilePath))
         );
@@ -170,7 +230,14 @@ begin
       else
       begin
         resultCode := processGerberRelease(
-          GetImageDPI, False, False, 0, False, 0, 1, 1,
+          GetImageDPI, 
+          GetGerberGrowMillimeters, 
+          GetGerberBorderMillimeters, 
+          GetGerberBorder, 
+          GetGerberInvertPolarity, 
+          GetGerberGrowSize, 
+          GetGerberScaleX, 
+          GetGerberScaleY,
           PAnsiChar(AnsiString(outputFilePath)),
           PAnsiChar(AnsiString(inputFilePath))
         );
@@ -206,14 +273,13 @@ begin
 
     jsonString := '{' + sLineBreak +
                   '  "imageDPI": ' + FloatToStr(GetImageDPI) + ',' + sLineBreak +
-                  '  "optGrowUnitsMillimeters": false,' + sLineBreak +
-                  '  "optBoarderUnitsMillimeters": false,' + sLineBreak +
-                  '  "optBoarder": 0,' + sLineBreak +
-                  '  "optInvertPolarity": false,' + sLineBreak +
-                  '  "rowsPerStrip": 512,' + sLineBreak +
-                  '  "optGrowSize": 0,' + sLineBreak +
-                  '  "optScaleX": 1,' + sLineBreak +
-                  '  "optScaleY": 1,' + sLineBreak +
+                  '  "optGrowUnitsMillimeters": ' + LowerCase(BoolToStr(GetGerberGrowMillimeters, True)) + ',' + sLineBreak +
+                  '  "optBoarderUnitsMillimeters": ' + LowerCase(BoolToStr(GetGerberBorderMillimeters, True)) + ',' + sLineBreak +
+                  '  "optBoarder": ' + FloatToStr(GetGerberBorder) + ',' + sLineBreak +
+                  '  "optInvertPolarity": ' + LowerCase(BoolToStr(GetGerberInvertPolarity, True)) + ',' + sLineBreak +
+                  '  "optGrowSize": ' + FloatToStr(GetGerberGrowSize) + ',' + sLineBreak +
+                  '  "optScaleX": ' + FloatToStr(GetGerberScaleX) + ',' + sLineBreak +
+                  '  "optScaleY": ' + FloatToStr(GetGerberScaleY) + ',' + sLineBreak +
                   '  "outputFilename": "' + outputFilePath + '",' + sLineBreak +
                   '  "inputFilename": "' + escapedInputPath + '"' + sLineBreak +
                   '}';
@@ -243,6 +309,11 @@ begin
   end;
 end;
 
+procedure TForm1.ExcellonEditGrowSizeChange(Sender: TObject);
+begin
+
+end;
+
 // === Обработка Excellon (кнопка) ===
 procedure TForm1.ButtonProcessExcellonClick(Sender: TObject);
 var
@@ -261,7 +332,16 @@ begin
       if CheckBoxDebug.Checked then
       begin
         resultCode := processExcellonDebug(
-          GetImageDPI, False, False, 0, False, 0, 1, 1,
+          GetImageDPI, 
+          GetExcellonUnitsMillimeters, 
+          GetExcellonBorder, 
+          GetExcellonInvertPolarity, 
+          GetExcellonGrowSize, 
+          GetExcellonScaleX, 
+          GetExcellonScaleY,
+          GetExcellonUniformDrills,
+          GetExcellonUniformDrillsMillimeters,
+          GetExcellonUniformDrillDiameter,
           PAnsiChar(AnsiString(outputFilePath)),
           PAnsiChar(AnsiString(inputFilePath))
         );
@@ -269,7 +349,16 @@ begin
       else
       begin
         resultCode := processExcellonRelease(
-          GetImageDPI, False, False, 0, False, 0, 1, 1,
+          GetImageDPI, 
+          GetExcellonUnitsMillimeters, 
+          GetExcellonBorder, 
+          GetExcellonInvertPolarity, 
+          GetExcellonGrowSize, 
+          GetExcellonScaleX, 
+          GetExcellonScaleY,
+          GetExcellonUniformDrills,
+          GetExcellonUniformDrillsMillimeters,
+          GetExcellonUniformDrillDiameter,
           PAnsiChar(AnsiString(outputFilePath)),
           PAnsiChar(AnsiString(inputFilePath))
         );
@@ -305,13 +394,15 @@ begin
 
     jsonString := '{' + sLineBreak +
                   '  "imageDPI": ' + FloatToStr(GetImageDPI) + ',' + sLineBreak +
-                  '  "optGrowUnitsMillimeters": false,' + sLineBreak +
-                  '  "optBoarderUnitsMillimeters": false,' + sLineBreak +
-                  '  "optBoarder": 0,' + sLineBreak +
-                  '  "optInvertPolarity": false,' + sLineBreak +
-                  '  "optGrowSize": 0,' + sLineBreak +
-                  '  "optScaleX": 1,' + sLineBreak +
-                  '  "optScaleY": 1,' + sLineBreak +
+                  '  "unitsMillimeters": ' + LowerCase(BoolToStr(GetExcellonUnitsMillimeters, True)) + ',' + sLineBreak +
+                  '  "optBoarder": ' + FloatToStr(GetExcellonBorder) + ',' + sLineBreak +
+                  '  "optInvertPolarity": ' + LowerCase(BoolToStr(GetExcellonInvertPolarity, True)) + ',' + sLineBreak +
+                  '  "optGrowSize": ' + FloatToStr(GetExcellonGrowSize) + ',' + sLineBreak +
+                  '  "optScaleX": ' + FloatToStr(GetExcellonScaleX) + ',' + sLineBreak +
+                  '  "optScaleY": ' + FloatToStr(GetExcellonScaleY) + ',' + sLineBreak +
+                  '  "uniformDrills": ' + LowerCase(BoolToStr(GetExcellonUniformDrills, True)) + ',' + sLineBreak +
+                  '  "uniformDrillsMillimeters": ' + LowerCase(BoolToStr(GetExcellonUniformDrillsMillimeters, True)) + ',' + sLineBreak +
+                  '  "uniformDrillDiameter": ' + FloatToStr(GetExcellonUniformDrillDiameter) + ',' + sLineBreak +
                   '  "outputFilename": "' + outputFilePath + '",' + sLineBreak +
                   '  "inputFilename": "' + escapedInputPath + '"' + sLineBreak +
                   '}';
@@ -344,6 +435,124 @@ end;
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   MaskEditDpi.Text := '1024';
+  
+  // Инициализация контролов для Gerber
+  GerberEditScaleX.Text := '1.0';
+  GerberEditScaleY.Text := '1.0';
+  Edit1.Text := '0.0';
+  GerberEditGrowSize.Text := '0.0';
+  GerberCheckBoxInvertPolarity.Checked := False;
+  GerberCheckBoxBorderMillimeters.Checked := False;
+  GerberCheckBoxGrowMillimeters.Checked := False;
+  
+  // Инициализация контролов для Excellon
+  ExcellonEditScaleX.Text := '1.0';
+  ExcellonEditScaleY.Text := '1.0';
+  ExcellonEditBorder.Text := '0.0';
+  ExcellonEditGrowSize.Text := '0.0';
+  ExcellonEditUniformDrillDiameter.Text := '0.0';
+  ExcellonCheckBoxInvertPolarity.Checked := False;
+  ExcellonCheckBoxUnitsMillimeters.Checked := False;
+  ExcellonCheckBoxUniformDrills.Checked := False;
+  ExcellonCheckBoxUniformDrillsMillimeters.Checked := False;
+end;
+
+// Реализация вспомогательных функций для Gerber
+function TForm1.GetGerberScaleX: Double;
+begin
+  if not TryStrToFloat(GerberEditScaleX.Text, Result) then
+    Result := 1.0;
+  if Result <= 0 then Result := 1.0;
+end;
+
+function TForm1.GetGerberScaleY: Double;
+begin
+  if not TryStrToFloat(GerberEditScaleY.Text, Result) then
+    Result := 1.0;
+  if Result <= 0 then Result := 1.0;
+end;
+
+function TForm1.GetGerberBorder: Double;
+begin
+  if not TryStrToFloat(Edit1.Text, Result) then
+    Result := 0.0;
+  if Result < 0 then Result := 0.0;
+end;
+
+function TForm1.GetGerberGrowSize: Double;
+begin
+  if not TryStrToFloat(GerberEditGrowSize.Text, Result) then
+    Result := 0.0;
+end;
+
+function TForm1.GetGerberBorderMillimeters: Boolean;
+begin
+  Result := GerberCheckBoxBorderMillimeters.Checked;
+end;
+
+function TForm1.GetGerberGrowMillimeters: Boolean;
+begin
+  Result := GerberCheckBoxGrowMillimeters.Checked;
+end;
+
+function TForm1.GetGerberInvertPolarity: Boolean;
+begin
+  Result := GerberCheckBoxInvertPolarity.Checked;
+end;
+
+// Реализация вспомогательных функций для Excellon
+function TForm1.GetExcellonScaleX: Double;
+begin
+  if not TryStrToFloat(ExcellonEditScaleX.Text, Result) then
+    Result := 1.0;
+  if Result <= 0 then Result := 1.0;
+end;
+
+function TForm1.GetExcellonScaleY: Double;
+begin
+  if not TryStrToFloat(ExcellonEditScaleY.Text, Result) then
+    Result := 1.0;
+  if Result <= 0 then Result := 1.0;
+end;
+
+function TForm1.GetExcellonBorder: Double;
+begin
+  if not TryStrToFloat(ExcellonEditBorder.Text, Result) then
+    Result := 0.0;
+  if Result < 0 then Result := 0.0;
+end;
+
+function TForm1.GetExcellonGrowSize: Double;
+begin
+  if not TryStrToFloat(ExcellonEditGrowSize.Text, Result) then
+    Result := 0.0;
+end;
+
+function TForm1.GetExcellonUnitsMillimeters: Boolean;
+begin
+  Result := ExcellonCheckBoxUnitsMillimeters.Checked;
+end;
+
+function TForm1.GetExcellonInvertPolarity: Boolean;
+begin
+  Result := ExcellonCheckBoxInvertPolarity.Checked;
+end;
+
+function TForm1.GetExcellonUniformDrills: Boolean;
+begin
+  Result := ExcellonCheckBoxUniformDrills.Checked;
+end;
+
+function TForm1.GetExcellonUniformDrillsMillimeters: Boolean;
+begin
+  Result := ExcellonCheckBoxUniformDrillsMillimeters.Checked;
+end;
+
+function TForm1.GetExcellonUniformDrillDiameter: Double;
+begin
+  if not TryStrToFloat(ExcellonEditUniformDrillDiameter.Text, Result) then
+    Result := 0.0;
+  if Result < 0 then Result := 0.0;
 end;
 
 end.

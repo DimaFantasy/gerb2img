@@ -162,16 +162,17 @@ std::string normalizePathToDoubleBackslashes(const std::string &path)
 
 //**********************************************************
 extern "C" __declspec(dllexport) int __stdcall processGerber(
-	double imageDPI,
-	bool optGrowUnitsMillimeters,
-	bool optBoarderUnitsMillimeters,
-	double optBoarder,
-	bool optInvertPolarity,
-	double optGrowSize,
-	double optScaleX,
-	double optScaleY,
-	const char *outputFilename,
-	const char *inputFilename)
+	double imageDPI,					// Разрешение изображения в DPI (точках на дюйм)
+	bool optGrowUnitsMillimeters,		// Единицы измерения для optGrowSize: true - миллиметры, false - пиксели
+	bool optBoarderUnitsMillimeters,	// Единицы измерения для optBoarder: true - миллиметры, false - пиксели
+	double optBoarder,					// Размер отступа от края изображения (mm/pix)
+	bool optInvertPolarity,				// Инвертировать полярность изображения
+	double optGrowSize,					// Значение увеличения размера объектов (mm/pix) 
+	double optScaleX,					// Масштаб по оси X
+	double optScaleY,					// Масштаб по оси Y
+	const char *outputFilename,			// Имя выходного файла
+	const char *inputFilename			// Имя входного файла Gerber
+	)
 {
 	try
 	{
@@ -352,7 +353,7 @@ extern "C" __declspec(dllexport) int __stdcall processGerber(
 			// Set DPI information
 			output.SetDPI(int(imageDPI), int(imageDPI));
 
-			// Initialize all pixels based on polarity
+			// Цвета для пикселей
 			RGBApixel white;
 			white.Red = white.Green = white.Blue = white.Alpha = 255;
 			RGBApixel black;
@@ -362,12 +363,13 @@ extern "C" __declspec(dllexport) int __stdcall processGerber(
 			// - Для DARK полигонов (основной слой платы) фон всегда БЕЛЫЙ
 			// - Для CLEAR полигонов (прорези и отверстия) фон всегда ЧЕРНЫЙ
 			// НО в BMP форматe белый = 255, черный = 0, что инвертировано по отношению к TIFF
-			// Поэтому фон всегда делаем БЕЛЫМ для начала
+			// Очищаем холст с учетом запрошенной полярности
+			RGBApixel bgColor = isPolarityDark ? white : black;
 			for (unsigned y = 0; y < imageHeight; y++)
 			{
 				for (unsigned x = 0; x < imageWidth; x++)
 				{
-					output.SetPixel(x, y, white);
+					output.SetPixel(x, y, bgColor);
 				}
 			}
 
@@ -546,11 +548,7 @@ extern "C" __declspec(dllexport) int __stdcall processGerberJSON(const char *jso
 		bool optGrowUnitsMillimeters = j.value("optGrowUnitsMillimeters", false);
 		bool optBoarderUnitsMillimeters = j.value("optBoarderUnitsMillimeters", false);
 		double optBoarder = j.value("optBoarder", 0.0);
-		bool optInvertPolarity = j.value("optInvertPolarity", false);
-		
-		// Количество строк в одной полосе при формировании TIFF-файла
-		// Используем фиксированное значение из глобальной переменной
-		
+		bool optInvertPolarity = j.value("optInvertPolarity", false);		
 		double optGrowSize = j.value("optGrowSize", 0.0);
 		double optScaleX = j.value("optScaleX", 1.0);
 		double optScaleY = j.value("optScaleY", 1.0);
@@ -581,16 +579,19 @@ extern "C" __declspec(dllexport) int __stdcall processGerberJSON(const char *jso
 // Функция для обработки Excellon файлов (формат сверловки плат)
 //**********************************************************
 extern "C" __declspec(dllexport) int __stdcall processExcellon(
-	double imageDPI,
-	bool optGrowUnitsMillimeters,
-	bool optBoarderUnitsMillimeters,
-	double optBoarder,
-	bool optInvertPolarity,
-	double optGrowSize,
-	double optScaleX,
-	double optScaleY,
-	const char *outputFilename,
-	const char *inputFilename)
+    double imageDPI,            // Разрешение изображения в DPI (точках на дюйм)
+    bool unitsMillimeters,      // Единицы измерения: true - миллиметры, false - пиксели
+    double optBoarder,          // Размер отступа от края изображения
+    bool optInvertPolarity,     // Инвертировать полярность изображения
+    double optGrowSize,         // Значение увеличения размера объектов
+    double optScaleX,           // Масштаб по оси X
+    double optScaleY,           // Масштаб по оси Y
+    bool uniformDrills,         // Использовать одинаковый диаметр для всех отверстий	
+    bool uniformDrillsMillimeters, // Для uniformDrillDiameter: true - миллиметры, false - дюймы
+    double uniformDrillDiameter,// Значение диаметра для всех отверстий (если uniformDrills=true)
+    const char *outputFilename, // Имя выходного файла
+    const char *inputFilename   // Имя входного файла Excellon
+)
 {
 	try
 	{
@@ -635,11 +636,24 @@ extern "C" __declspec(dllexport) int __stdcall processExcellon(
 						<< "optScaleX: " << optScaleX << "\n"
 						<< "optScaleY: " << optScaleY;
 
+		if (uniformDrills) {
+			excellonParamsLog << "\n" << "uniformDrillDiameter: " << uniformDrillDiameter;
+		}
+
+		// Корректировка единиц измерения (используем один параметр)
+		if (unitsMillimeters) {
+			optGrowSize *= imageDPI / 25.4;  // Преобразование мм в пиксели
+			optBoarder *= imageDPI / 25.4;   // Преобразование мм в пиксели
+			// НЕ преобразуем uniformDrillDiameter здесь, это будет сделано внутри класса Excellon
+		}
+
 		// Создаем объект Excellon для обработки файла сверловки
 		std::list<Excellon *> excellonList;
 		try
 		{
-			excellonList.push_back(new Excellon(file, imageDPI, optGrowSize, optScaleX, optScaleY));
+			excellonList.push_back(new Excellon(file, imageDPI, optGrowSize, optScaleX, optScaleY, 
+                                              uniformDrills ? uniformDrillDiameter : 0,
+                                              uniformDrillsMillimeters)); // Передаем флаг единиц измерения
 		}
 		catch (const std::exception &e)
 		{
@@ -692,12 +706,6 @@ extern "C" __declspec(dllexport) int __stdcall processExcellon(
 			return ERROR_INVALID_PARAMETERS; // код ошибки: некорректные параметры
 		}
 
-		// Корректировка единиц измерения
-		if (optGrowUnitsMillimeters)
-			optGrowSize *= imageDPI / 25.4;
-		if (optBoarderUnitsMillimeters)
-			optBoarder *= imageDPI / 25.4;
-
 		int miny = INT_MAX; // Минимальные и максимальные координаты для отверстий
 		int minx = INT_MAX;
 		int maxy = INT_MIN;
@@ -736,6 +744,7 @@ extern "C" __declspec(dllexport) int __stdcall processExcellon(
 		int xOffset = int(std::floor(optBoarder));
 		int yOffset = xOffset;
 
+		// Получаем базовую полярность из настроек Excellon
 		bool isPolarityDark = true;
 		isPolarityDark = (optInvertPolarity ^ excellonList.front()->imagePolarityDark);
 		if (rowsPerStrip > static_cast<unsigned>(imageHeight) || rowsPerStrip == 0)
@@ -768,12 +777,13 @@ extern "C" __declspec(dllexport) int __stdcall processExcellon(
 			// - Для DARK полигонов (основной слой платы) фон всегда БЕЛЫЙ
 			// - Для CLEAR полигонов (прорези и отверстия) фон всегда ЧЕРНЫЙ
 			// НО в BMP форматe белый = 255, черный = 0, что инвертировано по отношению к TIFF
-			// Поэтому фон всегда делаем БЕЛЫМ для начала
+			// Очищаем холст с учетом запрошенной полярности
+			RGBApixel bgColor = isPolarityDark ? white : black;
 			for (unsigned y = 0; y < imageHeight; y++)
 			{
 				for (unsigned x = 0; x < imageWidth; x++)
 				{
-					output.SetPixel(x, y, white);
+					output.SetPixel(x, y, bgColor);
 				}
 			}
 
@@ -802,8 +812,10 @@ extern "C" __declspec(dllexport) int __stdcall processExcellon(
 								(y - miny + yOffset) >= 0 &&
 								(y - miny + yOffset) < (int)imageHeight)
 							{
-								output.SetPixel(x, y - miny + yOffset,
-												(pol == DARK) ? black : white);
+								// Инвертируем Y-координату для правильного отображения Excellon координат
+								// Это необходимо, чтобы соответствовать BMP спецификации, где строки идут снизу вверх
+								int invY = imageHeight - 1 - (y - miny + yOffset);
+								output.SetPixel(x, invY, (pol == DARK) ? black : white);
 							}
 						}
 					}
@@ -862,11 +874,13 @@ extern "C" __declspec(dllexport) int __stdcall processExcellon(
 				else
 					memset(bitmap, 0xff, bitmapBytes);
 
-				unsigned char *bufferLine = bitmap;
-
 				// Проходим по каждой строке в полосе
-				for (int y = ystart; (y - ystart) < static_cast<int>(rowsPerStrip) && (y <= maxy); y++, bufferLine += bytesPerScanline)
+				for (int y = ystart; (y - ystart) < static_cast<int>(rowsPerStrip) && (y <= maxy); y++)
 				{
+					// Инвертируем положение строки в буфере (от нижней к верхней)
+					// Это необходимо, чтобы соответствовать TIFF спецификации, где строки идут снизу вверх
+    				unsigned char *bufferLine = bitmap + (rowsPerStrip - 1 - (y - ystart)) * bytesPerScanline;
+					
 					while (polyIterator != globalPolygons.end() && y == (polyIterator->pixelMinY))
 					{
 						activePolys.push_back(PolygonReference());
@@ -935,44 +949,42 @@ extern "C" __declspec(dllexport) int __stdcall processExcellon(
 
 extern "C" __declspec(dllexport) int __stdcall processExcellonJSON(const char *jsonParams)
 {
-	try
-	{
-		// Десериализация JSON в параметры
-		json j = json::parse(jsonParams);
+    try
+    {
+        // Десериализация JSON в параметры
+        json j = json::parse(jsonParams);
 
-		double imageDPI = j.value("imageDPI", 2400.0);
-		bool optGrowUnitsMillimeters = j.value("optGrowUnitsMillimeters", false);
-		bool optBoarderUnitsMillimeters = j.value("optBoarderUnitsMillimeters", false);
-		double optBoarder = j.value("optBoarder", 0.0);
-		bool optInvertPolarity = j.value("optInvertPolarity", false);	
-		// Параметр увеличения размера отверстий в Excellon-файле (в дюймах или мм)
-		// Позволяет компенсировать технологические особенности производства:
-		// - Положительные значения увеличивают диаметр отверстий
-		// - Отрицательные значения уменьшают диаметр отверстий
-		// - Нулевое значение оставляет размеры без изменений
-		double optGrowSize = j.value("optGrowSize", 0.0);
-		
-		double optScaleX = j.value("optScaleX", 1.0);
-		double optScaleY = j.value("optScaleY", 1.0);
-		std::string outputFilename = j.value("outputFilename", "");
-		std::string inputFilename = j.value("inputFilename", "");
+        double imageDPI = j.value("imageDPI", 2400.0);
+        bool unitsMillimeters = j.value("unitsMillimeters", false);  // Объединенный параметр единиц измерения
+        double optBoarder = j.value("optBoarder", 0.0);
+        bool optInvertPolarity = j.value("optInvertPolarity", false);
+        double optGrowSize = j.value("optGrowSize", 0.0);
+        double optScaleX = j.value("optScaleX", 1.0);
+        double optScaleY = j.value("optScaleY", 1.0);
+        bool uniformDrills = j.value("uniformDrills", false);  // Использовать одинаковый диаметр для всех отверстий		
+        bool uniformDrillsMillimeters = j.value("uniformDrillsMillimeters", true);
+        double uniformDrillDiameter = j.value("uniformDrillDiameter", 0.5);  // Значение диаметра для всех отверстий
+        std::string outputFilename = j.value("outputFilename", "");
+        std::string inputFilename = j.value("inputFilename", "");
 
-		// Вызов основного процесса
-		return processExcellon(
-			imageDPI,
-			optGrowUnitsMillimeters,
-			optBoarderUnitsMillimeters,
-			optBoarder,
-			optInvertPolarity,
-			optGrowSize,
-			optScaleX,
-			optScaleY,
-			outputFilename.c_str(),
-			inputFilename.c_str());
-	}
-	catch (const std::exception &e)
-	{
-		std::cerr << "Error processing JSON: " << e.what() << std::endl;
-		return ERROR_JSON_PROCESSING; // код ошибки: ошибка обработки JSON
-	}
+        // Вызов основного процесса с новыми параметрами
+        return processExcellon(
+            imageDPI,
+            unitsMillimeters,
+            optBoarder,
+            optInvertPolarity,
+            optGrowSize,
+            optScaleX,
+            optScaleY,
+            uniformDrills,			
+            uniformDrillsMillimeters,
+            uniformDrillDiameter,
+            outputFilename.c_str(),
+            inputFilename.c_str());
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error processing JSON: " << e.what() << std::endl;
+        return ERROR_JSON_PROCESSING; // код ошибки: ошибка обработки JSON
+    }
 }

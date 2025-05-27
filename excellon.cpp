@@ -1,18 +1,4 @@
-//
-// This
-// file
-// is
-// distributed
-// under
-// the
-// terms
-// of
-// the
-// GNU
-// General
-// Public
-// License
-// v3.
+//This file is distributed under the terms of the GNU General Public License v3.
 
 #define _USE_MATH_DEFINES
 #include <vector>
@@ -326,8 +312,11 @@ void Excellon::parseCoordinate(const string& line) {
         pos.toolNumber = currentTool;
         drillPositions.push_back(pos);
         
-        // Создаем полигон для отверстия
-        createDrillPolygon(x, y, tools[currentTool].diameter);
+        // Выбираем диаметр отверстия - либо унифицированный, либо из инструмента
+        double diameter = (uniformDrillDiameter > 0) ? uniformDrillDiameter : tools[currentTool].diameter;
+        
+        // Создаем полигон для отверстия с выбранным диаметром
+        createDrillPolygon(x, y, diameter);
     }
 }
 
@@ -454,14 +443,19 @@ void Excellon::createDrillPolygon(double x, double y, double diameter) {
  * @param growSize Размер для увеличения полигонов
  * @param optScaleX Масштабирование по оси X
  * @param optScaleY Масштабирование по оси Y
+ * @param uniformDrillDiameter Если > 0, использовать этот диаметр для всех отверстий
+ * @param uniformDrillInMillimeters Указывает, задан ли uniformDrillDiameter в миллиметрах (true) или дюймах (false)
  */
 Excellon::Excellon(FILE* fp_excellon, const double dotsPerInch, const double growSize, 
-                   double optScaleX, double optScaleY)
+                   double optScaleX, double optScaleY, double uniformDrillDiameter,
+                   bool uniformDrillInMillimeters)
     : dotsPerInch(dotsPerInch), growSize(growSize), optScaleX(optScaleX), optScaleY(optScaleY),
-      currentTool(0), currentX(0), currentY(0), units(INCH), isHeaderActive(false),
-      isAbsoluteCoords(true), isLeadingZeros(true), isTrailingZeros(false),
-      coordDecimals(4), lineNumber(1), excellonFormat2(false), scaleFactor(1.0),
-      isError(false), imagePolarityDark(true)
+      uniformDrillDiameter(uniformDrillInMillimeters && uniformDrillDiameter > 0 ? 
+                          uniformDrillDiameter / 25.4 : uniformDrillDiameter), // Конвертация из мм в дюймы если нужно
+      currentTool(0), currentX(0), currentY(0), 
+      units(INCH), isHeaderActive(false), isAbsoluteCoords(true), isLeadingZeros(true), 
+      isTrailingZeros(false), coordDecimals(4), lineNumber(1), excellonFormat2(false), 
+      scaleFactor(1.0), isError(false), imagePolarityDark(true)
 {
 #ifdef ENABLE_DEBUG_LOGGING
     std::ofstream logFile("excellon_debug.log", std::ios::app);
