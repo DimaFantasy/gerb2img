@@ -18,8 +18,6 @@
 #include <stdarg.h>
 #include <string.h>
 #include "config.h"
-#include "nlohmann/json.hpp" // Локальный путь к json.hpp
-using json = nlohmann::json;
 
 #include "polygon.h"
 #include "apertures.h"
@@ -171,7 +169,14 @@ extern "C" __declspec(dllexport) int __stdcall processGerber(
 	double optScaleX,					// Масштаб по оси X
 	double optScaleY,					// Масштаб по оси Y
 	const char *outputFilename,			// Имя выходного файла
-	const char *inputFilename			// Имя входного файла Gerber
+	const char *inputFilename,			// Имя входного файла Gerber
+	//* Сохраняем информацию о смещении начала координат (0,0) относительно изображения
+	//* Положительное смещение X: начало координат находится справа от левого края изображения
+	//* Отрицательное смещение X: начало координат находится за пределами левого края изображения
+	//* Положительное смещение Y: начало координат находится выше верхнего края изображения
+	//* Отрицательное смещение Y: начало координат находится ниже верхнего края изображения	
+    int *offsetX,              // [ВЫХОД] Смещение X начала координат в пикселях
+    int *offsetY               // [ВЫХОД] Смещение Y начала координат в пикселях	
 	)
 {
 	try
@@ -321,6 +326,18 @@ extern "C" __declspec(dllexport) int __stdcall processGerber(
 		unsigned imageHeight = unsigned(std::ceil((maxy - miny) + 2 * optBoarder + 1));
 		int xOffset = int(std::floor(optBoarder));
 		int yOffset = xOffset;
+
+		//* Сохраняем информацию о смещении начала координат (0,0) относительно изображения
+		//* Положительное смещение X: начало координат находится справа от левого края изображения
+		//* Отрицательное смещение X: начало координат находится за пределами левого края изображения
+		//* Положительное смещение Y: начало координат находится выше верхнего края изображения
+		//* Отрицательное смещение Y: начало координат находится ниже верхнего края изображения
+		if (offsetX != nullptr) {
+			*offsetX = int(std::floor(optBoarder)) - minx;
+		}
+		if (offsetY != nullptr) {	
+			*offsetY = int(std::floor(optBoarder)) - miny;	
+		}
 
 		// ВАЖНО: Не инвертируем полярность из файла Gerber, вместо этого используем напрямую
 		bool isPolarityDark = gerbers.front()->imagePolarityDark; 
@@ -537,44 +554,6 @@ extern "C" __declspec(dllexport) int __stdcall processGerber(
 	}
 }
 
-extern "C" __declspec(dllexport) int __stdcall processGerberJSON(const char *jsonParams)
-{
-	try
-	{
-		// Десериализация JSON в параметры
-		json j = json::parse(jsonParams);
-
-		double imageDPI = j.value("imageDPI", 2400.0);
-		bool optGrowUnitsMillimeters = j.value("optGrowUnitsMillimeters", false);
-		bool optBoarderUnitsMillimeters = j.value("optBoarderUnitsMillimeters", false);
-		double optBoarder = j.value("optBoarder", 0.0);
-		bool optInvertPolarity = j.value("optInvertPolarity", false);		
-		double optGrowSize = j.value("optGrowSize", 0.0);
-		double optScaleX = j.value("optScaleX", 1.0);
-		double optScaleY = j.value("optScaleY", 1.0);
-		std::string outputFilename = j.value("outputFilename", "");
-		std::string inputFilename = j.value("inputFilename", "");
-
-		// Вызов основного процесса
-		return processGerber(
-			imageDPI,
-			optGrowUnitsMillimeters,
-			optBoarderUnitsMillimeters,
-			optBoarder,
-			optInvertPolarity,
-			optGrowSize,
-			optScaleX,
-			optScaleY,
-			outputFilename.c_str(),
-			inputFilename.c_str());
-	}
-	catch (const std::exception &e)
-	{
-		std::cerr << "Error processing JSON: " << e.what() << std::endl;
-		return ERROR_JSON_PROCESSING; // код ошибки: ошибка обработки JSON
-	}
-}
-
 //**********************************************************
 // Функция для обработки Excellon файлов (формат сверловки плат)
 //**********************************************************
@@ -591,7 +570,14 @@ extern "C" __declspec(dllexport) int __stdcall processExcellon(
     double uniformDrillDiameter,// Значение диаметра для всех отверстий (если uniformDrills=true)
     const char *outputFilename, // Имя выходного файла
     const char *inputFilename,   // Имя входного файла Excellon
-	int *drillCount            // Указатель на переменную для числа сверловок	
+	int *drillCount,            // [ВЫХОД] Указатель на переменную для числа сверловок	
+	//* Сохраняем информацию о смещении начала координат (0,0) относительно изображения
+	//* Положительное смещение X: начало координат находится справа от левого края изображения
+	//* Отрицательное смещение X: начало координат находится за пределами левого края изображения
+	//* Положительное смещение Y: начало координат находится выше верхнего края изображения
+	//* Отрицательное смещение Y: начало координат находится ниже верхнего края изображения	
+    int *offsetX,              // [ВЫХОД] Смещение X начала координат в пикселях
+    int *offsetY               // [ВЫХОД] Смещение Y начала координат в пикселях
 )
 {
 	try
@@ -752,6 +738,18 @@ extern "C" __declspec(dllexport) int __stdcall processExcellon(
 		int xOffset = int(std::floor(optBoarder));
 		int yOffset = xOffset;
 
+		//* Сохраняем информацию о смещении начала координат (0,0) относительно изображения
+		//* Положительное смещение X: начало координат находится справа от левого края изображения
+		//* Отрицательное смещение X: начало координат находится за пределами левого края изображения
+		//* Положительное смещение Y: начало координат находится выше верхнего края изображения
+		//* Отрицательное смещение Y: начало координат находится ниже верхнего края изображения
+		if (offsetX != nullptr) {
+			*offsetX = int(std::floor(optBoarder)) - minx;
+		}
+		if (offsetY != nullptr) {
+			*offsetY = int(std::floor(optBoarder)) - miny;	
+		}		
+
 		// Получаем базовую полярность из настроек Excellon
 		bool isPolarityDark = true;
 		isPolarityDark = (optInvertPolarity ^ excellonList.front()->imagePolarityDark);
@@ -820,10 +818,9 @@ extern "C" __declspec(dllexport) int __stdcall processExcellon(
 								(y - miny + yOffset) >= 0 &&
 								(y - miny + yOffset) < (int)imageHeight)
 							{
-								// Инвертируем Y-координату для правильного отображения Excellon координат
-								// Это необходимо, чтобы соответствовать BMP спецификации, где строки идут снизу вверх
-								int invY = imageHeight - 1 - (y - miny + yOffset);
-								output.SetPixel(x, invY, (pol == DARK) ? black : white);
+								//Координаты по Y уже инвертированы в excellon, поэтому просто рисуем
+								// пиксель в нужном месте
+								output.SetPixel(x, y - miny + yOffset, (pol == DARK) ? black : white);
 							}
 						}
 					}
@@ -885,9 +882,9 @@ extern "C" __declspec(dllexport) int __stdcall processExcellon(
 				// Проходим по каждой строке в полосе
 				for (int y = ystart; (y - ystart) < static_cast<int>(rowsPerStrip) && (y <= maxy); y++)
 				{
-					// Инвертируем положение строки в буфере (от нижней к верхней)
-					// Это необходимо, чтобы соответствовать TIFF спецификации, где строки идут снизу вверх
-    				unsigned char *bufferLine = bitmap + (rowsPerStrip - 1 - (y - ystart)) * bytesPerScanline;
+					// Координаты строки в буфере уже инвертированы в excellon, поэтому просто рисуем
+					// пиксель в нужном месте
+    				unsigned char *bufferLine = bitmap + ((y - ystart) * bytesPerScanline);
 					
 					while (polyIterator != globalPolygons.end() && y == (polyIterator->pixelMinY))
 					{
@@ -955,48 +952,4 @@ extern "C" __declspec(dllexport) int __stdcall processExcellon(
 	}
 }
 
-extern "C" __declspec(dllexport) int __stdcall processExcellonJSON(const char *jsonParams)
-{
-    try
-    {
-        // Десериализация JSON в параметры
-        json j = json::parse(jsonParams);
 
-		// Создаем указатель, но не используем результат
-		int *localDrillCount = nullptr;
-
-        double imageDPI = j.value("imageDPI", 2400.0);
-        bool unitsMillimeters = j.value("unitsMillimeters", false);  // Объединенный параметр единиц измерения
-        double optBoarder = j.value("optBoarder", 0.0);
-        bool optInvertPolarity = j.value("optInvertPolarity", false);
-        double optGrowSize = j.value("optGrowSize", 0.0);
-        double optScaleX = j.value("optScaleX", 1.0);
-        double optScaleY = j.value("optScaleY", 1.0);
-        bool uniformDrills = j.value("uniformDrills", false);  // Использовать одинаковый диаметр для всех отверстий		
-        bool uniformDrillsMillimeters = j.value("uniformDrillsMillimeters", true);
-        double uniformDrillDiameter = j.value("uniformDrillDiameter", 0.5);  // Значение диаметра для всех отверстий
-        std::string outputFilename = j.value("outputFilename", "");
-        std::string inputFilename = j.value("inputFilename", "");
-
-        // Вызов основного процесса с новыми параметрами
-        return processExcellon(
-            imageDPI,
-            unitsMillimeters,
-            optBoarder,
-            optInvertPolarity,
-            optGrowSize,
-            optScaleX,
-            optScaleY,
-            uniformDrills,			
-            uniformDrillsMillimeters,
-            uniformDrillDiameter,
-            outputFilename.c_str(),
-            inputFilename.c_str(),
-            localDrillCount);
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << "Error processing JSON: " << e.what() << std::endl;
-        return ERROR_JSON_PROCESSING; // код ошибки: ошибка обработки JSON
-    }
-}

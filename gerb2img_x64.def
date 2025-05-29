@@ -1,5 +1,3 @@
 EXPORTS
     processExcellon @1
-    processExcellonJSON @2
-    processGerber @3
-    processGerberJSON @4
+    processGerber @2

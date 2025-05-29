@@ -1,5 +1,6 @@
 //This file is distributed under the terms of the GNU General Public License v3.
 
+//#define ENABLE_DEBUG_LOGGING  // Включаем отладочные логи
 #define _USE_MATH_DEFINES
 #include <vector>
 #include <list>
@@ -150,7 +151,10 @@ double Excellon::getPixelsFromUnits(double value) {
     if (units == INCH) {
         return value * dotsPerInch;
     } else if (units == MILLIMETER) {
-        return value * dotsPerInch / 25.4;
+        // Корректная конвертация из миллиметров в пиксели
+        // 1 дюйм = 25.4 мм, значит для преобразования миллиметров в пиксели
+        // нужно умножить на (dotsPerInch / 25.4)
+        return value * (dotsPerInch / 25.4);
     } else {
         warning("Неизвестные единицы измерения, используются дюймы");
         return value * dotsPerInch;
@@ -199,11 +203,33 @@ void Excellon::parseHeader(const string& line) {
         isTrailingZeros = true;
     }
     
-    // Поиск информации о формате (например, "FORMAT=2.4")
+    // Поиск информации о формате (например, "FORMAT=2.4" или "FILE_FORMAT=3:3")
     if (line.find("FORMAT") != string::npos || line.find("FMAT") != string::npos) {
-        size_t pos = line.find('.');
-        if (pos != string::npos) {
-            coordDecimals = line[pos + 1] - '0';
+        // Сначала проверяем формат вида "FILE_FORMAT=3:3"
+        regex formatRegex("FILE_FORMAT=([0-9]):([0-9])");
+        smatch formatMatch;
+        
+        if (regex_search(line, formatMatch, formatRegex)) {
+            coordInts = stoi(formatMatch[1]);  // Количество цифр до запятой
+            coordDecimals = stoi(formatMatch[2]);  // Количество цифр после запятой
+#ifdef ENABLE_DEBUG_LOGGING
+            std::ofstream logFile("excellon_debug.log", std::ios::app);
+            logFile << "[DEBUG] Обнаружен формат FILE_FORMAT=" << coordInts << ":" << coordDecimals << "\n";
+#endif
+        } else {
+            // Если не нашли такой формат, проверяем традиционный вид с точкой
+            size_t pos = line.find('.');
+            if (pos != string::npos && pos + 1 < line.length()) {
+                coordDecimals = line[pos + 1] - '0';
+                // Если есть символ перед точкой, это может быть количество цифр до запятой
+                if (pos > 0 && isdigit(line[pos - 1])) {
+                    coordInts = line[pos - 1] - '0';
+                }
+#ifdef ENABLE_DEBUG_LOGGING
+                std::ofstream logFile("excellon_debug.log", std::ios::app);
+                logFile << "[DEBUG] Обнаружен формат с точкой: " << coordInts << "." << coordDecimals << "\n";
+#endif
+            }
         }
     }
     
@@ -324,19 +350,83 @@ void Excellon::parseCoordinate(const string& line) {
  * @brief Разбор значения координаты
  * 
  * @param coord Строка с координатой
- * @param isX Флаг, указывающий, является ли это X координатой (в будущем может использоваться для разного форматирования X и Y)
+ * @param isX Флаг, указывающий, является ли это X координатой
  * @return Значение координаты в единицах измерения
  */
-double Excellon::parseCoord(const string& coord, bool /*isX*/) {
+double Excellon::parseCoord(const string& coord, 
+	#ifdef ENABLE_DEBUG_LOGGING
+		bool isX
+	#else
+		bool /* isX */
+	#endif
+	) {
+    // Логируем входные данные
+#ifdef ENABLE_DEBUG_LOGGING
+    std::ofstream logFile("excellon_debug.log", std::ios::app);
+    logFile << "[DEBUG] Разбор координаты " << (isX ? "X" : "Y") << ": " << coord;
+#endif
+
     // Проверка на наличие десятичной точки
     if (coord.find('.') != string::npos) {
-        return stod(coord);
+        double result = stod(coord);
+#ifdef ENABLE_DEBUG_LOGGING
+        logFile << " (с десятичной точкой) -> " << result << "\n";
+#endif
+        return result;
     }
     
-    // Обработка целочисленных координат без десятичной точки
-    double value = stod(coord);
-    double divisor = pow(10, coordDecimals);
-    return value / divisor;
+    // Получаем строку без знака
+    string coordStr = coord;
+    bool isNegative = false;
+    
+    if (!coordStr.empty() && (coordStr[0] == '+' || coordStr[0] == '-')) {
+        isNegative = (coordStr[0] == '-');
+        coordStr = coordStr.substr(1); // Убираем знак
+    }
+    
+    // Если задан формат FILE_FORMAT=X:Y, используем его для разделения
+    if (coordInts > 0) {
+        // Строковый метод разделения на целую и дробную части
+        string integerPart, fractionalPart;
+        
+        // Если длина строки <= количеству целых цифр, то дробной части нет
+        if (static_cast<int>(coordStr.length()) <= coordInts) {
+            integerPart = coordStr;
+            fractionalPart = "0";
+        } else {
+            // Разделяем строку на целую и дробную части согласно формату
+            integerPart = coordStr.substr(0, coordInts);
+            fractionalPart = coordStr.substr(coordInts);
+        }
+        
+        // Собираем итоговое число в виде строки с десятичной точкой
+        string resultStr = integerPart + "." + fractionalPart;
+        double result = stod(resultStr);
+        
+        // Применяем знак, если был отрицательный
+        if (isNegative) {
+            result = -result;
+        }
+        
+#ifdef ENABLE_DEBUG_LOGGING
+        logFile << " (формат " << coordInts << ":" << coordDecimals 
+                << ", целая часть: " << integerPart 
+                << ", дробная часть: " << fractionalPart 
+                << ") -> " << result << "\n";
+#endif
+        return result;
+    } else {
+        // Если формат не задан явно, используем стандартный подход с coordDecimals
+        double value = stod(coord);
+        double divisor = pow(10, coordDecimals);
+        double result = value / divisor;
+        
+#ifdef ENABLE_DEBUG_LOGGING
+        logFile << " (стандартный формат, " << coordDecimals 
+                << " цифр после запятой) -> " << result << "\n";
+#endif
+        return result;
+    }
 }
 
 /**
@@ -345,8 +435,28 @@ double Excellon::parseCoord(const string& coord, bool /*isX*/) {
  * @param line Строка для обработки
  */
 void Excellon::processExcellonLine(const string& line) {
-    // Игнорируем пустые строки и комментарии
-    if (line.empty() || line[0] == ';') {
+    // Проверяем комментарии, содержащие информацию о формате
+    if (line[0] == ';') {
+        // Проверяем, содержит ли комментарий информацию о формате
+        if (line.find("FILE_FORMAT=") != string::npos) {
+            regex formatRegex("FILE_FORMAT=([0-9]):([0-9])");
+            smatch formatMatch;
+            
+            if (regex_search(line, formatMatch, formatRegex)) {
+                coordInts = stoi(formatMatch[1]);  // Количество цифр до запятой
+                coordDecimals = stoi(formatMatch[2]);  // Количество цифр после запятой
+                
+#ifdef ENABLE_DEBUG_LOGGING
+                std::ofstream logFile("excellon_debug.log", std::ios::app);
+                logFile << "[DEBUG] Из комментария обнаружен формат FILE_FORMAT=" << coordInts << ":" << coordDecimals << "\n";
+#endif
+            }
+        }
+        return; // Для остальных комментариев просто возвращаемся
+    }
+    
+    // Игнорируем пустые строки
+    if (line.empty()) {
         return;
     }
     
@@ -410,7 +520,7 @@ void Excellon::createDrillPolygon(double x, double y, double diameter) {
     
     // Применяем масштабирование
     px *= optScaleX;
-    py *= optScaleY;
+	py *= -optScaleY;  // ИЗМЕНЕНИЕ: Добавляем отрицательный масштаб по Y, как в Gerber
     
     // Создаем новый полигон
     polygons.push_back(Polygon());
@@ -454,7 +564,7 @@ Excellon::Excellon(FILE* fp_excellon, const double dotsPerInch, const double gro
                           uniformDrillDiameter / 25.4 : uniformDrillDiameter), // Конвертация из мм в дюймы если нужно
       currentTool(0), currentX(0), currentY(0), 
       units(INCH), isHeaderActive(false), isAbsoluteCoords(true), isLeadingZeros(true), 
-      isTrailingZeros(false), coordDecimals(4), lineNumber(1), excellonFormat2(false), 
+      isTrailingZeros(false), coordDecimals(4), coordInts(0), lineNumber(1), excellonFormat2(false), 
       scaleFactor(1.0), isError(false), imagePolarityDark(true)
 {
 #ifdef ENABLE_DEBUG_LOGGING

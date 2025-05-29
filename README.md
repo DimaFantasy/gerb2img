@@ -14,8 +14,6 @@ The project has been reworked into a DLL library and EXE utility, making it conv
 - Export of functions for use in other applications through the DLL interface:
   - `processGerber`: The main function for processing Gerber files.
   - `processExcellon`: Function for processing Excellon files (drilling).
-  - `processGerberJSON`: Function for processing Gerber files with parameters in JSON format.
-  - `processExcellonJSON`: Function for processing Excellon files with parameters in JSON format.
 
 ## Exported DLL Functions
 
@@ -31,29 +29,10 @@ int __stdcall processGerber(
     double optScaleX,            // Scale factor on X axis
     double optScaleY,            // Scale factor on Y axis
     const char *outputFilename,  // Output file name
-    const char *inputFilename    // Input Gerber file name
+    const char *inputFilename,   // Input Gerber file name
+    int *offsetX,                // [OUT] Origin X-offset in pixels
+    int *offsetY                 // [OUT] Origin Y-offset in pixels
 );
-```
-
-### processGerberJSON
-```c
-int __stdcall processGerberJSON(const char *jsonParams);
-```
-
-Accepts a JSON string with parameters:
-```json
-{
-  "imageDPI": 2400.0,
-  "optGrowUnitsMillimeters": false,
-  "optBoarderUnitsMillimeters": false,
-  "optBoarder": 0.0,
-  "optInvertPolarity": false,
-  "optGrowSize": 0.0,
-  "optScaleX": 1.0,
-  "optScaleY": 1.0,
-  "outputFilename": "output.bmp",
-  "inputFilename": "input.gbr"
-}
 ```
 
 ### processExcellon
@@ -71,33 +50,19 @@ int __stdcall processExcellon(
     double uniformDrillDiameter,  // Diameter value for all holes (if uniformDrills=true) (mm/in)
     const char *outputFilename,   // Output file name
     const char *inputFilename,    // Input Excellon file name
-    int *drillCount               // Pointer to variable for returning the number of drilled holes
+    int *drillCount,              // [OUT] Pointer to variable for returning the number of drilled holes
+    int *offsetX,                 // [OUT] Origin X-offset in pixels
+    int *offsetY                  // [OUT] Origin Y-offset in pixels
 );
 ```
 
-### processExcellonJSON
-```c
-int __stdcall processExcellonJSON(const char *jsonParams);
-```
-
-Accepts a JSON string with parameters:
-```json
-{
-  "imageDPI": 2400.0,
-  "unitsMillimeters": false,
-  "optBoarder": 0.0,
-  "optInvertPolarity": false,
-  "optGrowSize": 0.0,
-  "optScaleX": 1.0,
-  "optScaleY": 1.0,
-  "uniformDrills": false,
-  "uniformDrillsMillimeters": false,
-  "uniformDrillDiameter": 0.0,
-  "outputFilename": "drill_output.bmp",
-  "inputFilename": "input.drl"
-}
-```
-**Note:** The `optGrowSize` parameter in Excellon allows compensation for technological peculiarities in production: positive values increase hole diameter, negative values decrease it. The function returns the number of processed drill holes through the special `drillCount` parameter.
+**Note:** 
+- The `optGrowSize` parameter in Excellon allows compensation for technological peculiarities in production: positive values increase hole diameter, negative values decrease it.
+- The `offsetX` and `offsetY` parameters provide information about the origin (0,0) position relative to the image:
+  - Positive X offset: origin is to the right of the image's left edge
+  - Negative X offset: origin is outside the left edge of the image
+  - Positive Y offset: origin is above the top edge of the image
+  - Negative Y offset: origin is below the top edge of the image
 
 ## Usage Examples
 
@@ -113,18 +78,25 @@ processGerber = gerb2img.processGerber
 processGerber.argtypes = [
     ctypes.c_double, ctypes.c_bool, ctypes.c_bool, ctypes.c_double,
     ctypes.c_bool, ctypes.c_double, ctypes.c_double,
-    ctypes.c_double, ctypes.c_char_p, ctypes.c_char_p
+    ctypes.c_double, ctypes.c_char_p, ctypes.c_char_p,
+    ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int)
 ]
 processGerber.restype = ctypes.c_int
+
+# Variables for receiving origin offset values
+offsetX = ctypes.c_int(0)
+offsetY = ctypes.c_int(0)
 
 # Calling the function for Gerber
 result = processGerber(
     2400.0, False, False, 0.0, False, 0.0, 1.0, 1.0,
-    b"output.bmp", b"example.gbr"
+    b"output.bmp", b"example.gbr", 
+    ctypes.byref(offsetX), ctypes.byref(offsetY)
 )
 
 if result == 0:
     print("Gerber conversion successful!")
+    print(f"Origin offset: X={offsetX.value}, Y={offsetY.value} pixels")
 else:
     print("Gerber conversion error!")
 
@@ -135,48 +107,29 @@ processExcellon.argtypes = [
     ctypes.c_bool, ctypes.c_double, ctypes.c_double,
     ctypes.c_double, ctypes.c_bool, ctypes.c_bool,
     ctypes.c_double, ctypes.c_char_p, ctypes.c_char_p,
+    ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
     ctypes.POINTER(ctypes.c_int)
 ]
 processExcellon.restype = ctypes.c_int
 
 # Calling the function for Excellon
 drill_count = ctypes.c_int(0)
+offsetX_drill = ctypes.c_int(0)
+offsetY_drill = ctypes.c_int(0)
+
 result = processExcellon(
     2400.0, False, 0.0, False, 0.0, 1.0, 1.0,
     False, False, 0.0,
     b"drill_output.bmp", b"example.drl",
-    ctypes.byref(drill_count)
+    ctypes.byref(drill_count), ctypes.byref(offsetX_drill),
+    ctypes.byref(offsetY_drill)
 )
 
 if result == 0:
     print(f"Excellon conversion successful! Number of drills: {drill_count.value}")
+    print(f"Origin offset: X={offsetX_drill.value}, Y={offsetY_drill.value} pixels")
 else:
     print("Excellon conversion error!")
-
-# Using JSON API
-processGerberJSON = gerb2img.processGerberJSON
-processGerberJSON.argtypes = [ctypes.c_char_p]
-processGerberJSON.restype = ctypes.c_int
-
-processExcellonJSON = gerb2img.processExcellonJSON
-processExcellonJSON.argtypes = [ctypes.c_char_p]
-processExcellonJSON.restype = ctypes.c_int
-
-# JSON example for Gerber
-gerber_json = b'''{"imageDPI": 2400.0, "optGrowUnitsMillimeters": false, 
-"optBoarderUnitsMillimeters": false, "optBoarder": 0.0, "optInvertPolarity": false, 
-"optGrowSize": 0.0, "optScaleX": 1.0, "optScaleY": 1.0, 
-"outputFilename": "output_json.bmp", "inputFilename": "example.gbr"}'''
-
-# JSON example for Excellon
-excellon_json = b'''{"imageDPI": 2400.0, "optGrowUnitsMillimeters": false, 
-"optBoarderUnitsMillimeters": false, "optBoarder": 0.0, "optInvertPolarity": false, 
-"optGrowSize": 0.02, "optScaleX": 1.0, "optScaleY": 1.0, 
-"outputFilename": "drill_output_json.bmp", "inputFilename": "example.drl"}'''
-
-# Calling JSON functions
-result_gerber_json = processGerberJSON(gerber_json)
-result_excellon_json = processExcellonJSON(excellon_json)
 ```
 
 ### Delphi
@@ -197,21 +150,27 @@ type
     optScaleX: Double;
     optScaleY: Double;
     outputFilename: PAnsiChar;
-    inputFilename: PAnsiChar
+    inputFilename: PAnsiChar;
+    offsetX: PInteger;
+    offsetY: PInteger
   ): Integer; stdcall;
 
   TProcessExcellon = function(
     imageDPI: Double;
-    optGrowUnitsMillimeters: Boolean;
-    optBoarderUnitsMillimeters: Boolean;
+    unitsMillimeters: Boolean;
     optBoarder: Double;
     optInvertPolarity: Boolean;
     optGrowSize: Double;
     optScaleX: Double;
     optScaleY: Double;
+    uniformDrills: Boolean;
+    uniformDrillsMillimeters: Boolean;
+    uniformDrillDiameter: Double;
     outputFilename: PAnsiChar;
     inputFilename: PAnsiChar;
-    drillCount: PInteger
+    drillCount: PInteger;
+    offsetX: PInteger;
+    offsetY: PInteger
   ): Integer; stdcall;
 
 var
@@ -233,16 +192,24 @@ begin
     raise Exception.Create('Failed to find processExcellon function');
 
   try
+    var offsetX, offsetY: Integer;
     if ProcessGerber(2400.0, False, False, 0.0, False, 0.0, 1.0, 1.0,
-      'output.bmp', 'example.gbr') = 0 then
-      Writeln('Gerber conversion successful!')
+      'output.bmp', 'example.gbr', @offsetX, @offsetY) = 0 then
+    begin
+      Writeln('Gerber conversion successful!');
+      Writeln('Origin offset: X=', offsetX, ', Y=', offsetY, ' pixels');
+    end
     else
       Writeln('Gerber conversion error!');
 
-    var drillCount: Integer;
-    if ProcessExcellon(2400.0, False, False, 0.0, False, 0.0, 1.0, 1.0,
-      'drill_output.bmp', 'example.drl', @drillCount) = 0 then
-      Writeln('Excellon conversion successful! Drill count: ', drillCount)
+    var drillCount, offsetX_drill, offsetY_drill: Integer;
+    if ProcessExcellon(2400.0, False, 0.0, False, 0.0, 1.0, 1.0,
+      False, False, 0.0, 'drill_output.bmp', 'example.drl', 
+      @drillCount, @offsetX_drill, @offsetY_drill) = 0 then
+    begin
+      Writeln('Excellon conversion successful! Drill count: ', drillCount);
+      Writeln('Origin offset: X=', offsetX_drill, ', Y=', offsetY_drill, ' pixels');
+    end
     else
       Writeln('Excellon conversion error!');
   finally
@@ -264,7 +231,6 @@ The project includes demonstration examples for using the library:
 - Libraries:
   - [libtiff](http://www.libtiff.org/)
   - [EasyBMP](http://easybmp.sourceforge.net/) - Already included
-  - [nlohmann/json](https://github.com/nlohmann/json) - Already included
 
 ## 🔧 Building Instructions for Windows (MinGW)
 
@@ -335,8 +301,6 @@ The project will be actively developed. Plans include:
 - Экспорт функций для использования в других приложениях через интерфейс DLL:
   - `processGerber`: Основная функция для обработки Gerber-файлов.
   - `processExcellon`: Функция для обработки Excellon файлов (сверловка).
-  - `processGerberJSON`: Функция для обработки Gerber-файлов с параметрами в формате JSON.
-  - `processExcellonJSON`: Функция для обработки Excellon файлов с параметрами в формате JSON.
 
 ## Экспортируемые функции DLL
 
@@ -352,29 +316,10 @@ int __stdcall processGerber(
     double optScaleX,            // Масштаб по оси X
     double optScaleY,            // Масштаб по оси Y
     const char *outputFilename,  // Имя выходного файла
-    const char *inputFilename    // Имя входного Gerber-файла
+    const char *inputFilename,    // Имя входного Gerber-файла
+    int *offsetX,                // [ВЫХОД] Смещение начала координат по X в пикселях
+    int *offsetY                 // [ВЫХОД] Смещение начала координат по Y в пикселях
 );
-```
-
-### processGerberJSON
-```c
-int __stdcall processGerberJSON(const char *jsonParams);
-```
-
-Принимает JSON-строку с параметрами:
-```json
-{
-  "imageDPI": 2400.0,
-  "optGrowUnitsMillimeters": false,
-  "optBoarderUnitsMillimeters": false,
-  "optBoarder": 0.0,
-  "optInvertPolarity": false,
-  "optGrowSize": 0.0,
-  "optScaleX": 1.0,
-  "optScaleY": 1.0,
-  "outputFilename": "output.bmp",
-  "inputFilename": "input.gbr"
-}
 ```
 
 ### processExcellon
@@ -392,33 +337,18 @@ int __stdcall processExcellon(
     double uniformDrillDiameter,  // Значение диаметра для всех отверстий (если uniformDrills=true) (мм/дюймы)
     const char *outputFilename,   // Имя выходного файла
     const char *inputFilename,    // Имя входного Excellon-файла
-    int *drillCount               // Указатель на переменную для возврата количества сверловок
+    int *drillCount,              // [ВЫХОД] Указатель на переменную для возврата количества сверловок
+    int *offsetX,                 // [ВЫХОД] Смещение начала координат по X в пикселях
+    int *offsetY                  // [ВЫХОД] Смещение начала координат по Y в пикселях
 );
 ```
-
-### processExcellonJSON
-```c
-int __stdcall processExcellonJSON(const char *jsonParams);
-```
-
-Принимает JSON-строку с параметрами:
-```json
-{
-  "imageDPI": 2400.0,
-  "unitsMillimeters": false,
-  "optBoarder": 0.0,
-  "optInvertPolarity": false,
-  "optGrowSize": 0.0,
-  "optScaleX": 1.0,
-  "optScaleY": 1.0,
-  "uniformDrills": false,
-  "uniformDrillsMillimeters": false,
-  "uniformDrillDiameter": 0.0,
-  "outputFilename": "drill_output.bmp",
-  "inputFilename": "input.drl"
-}
-```
-**Примечание:** Параметр `optGrowSize` в Excellon позволяет компенсировать технологические особенности производства: положительные значения увеличивают диаметр отверстий, отрицательные - уменьшают. Функция возвращает количество обработанных сверловок через специальный параметр `drillCount`.
+**Примечание:** 
+- Параметр `optGrowSize` в Excellon позволяет компенсировать технологические особенности производства: положительные значения увеличивают диаметр отверстий, отрицательные - уменьшают.
+- Параметры `offsetX` и `offsetY` предоставляют информацию о положении начала координат (0,0) относительно изображения:
+  - Положительное смещение X: начало координат находится справа от левого края изображения
+  - Отрицательное смещение X: начало координат находится за пределами левого края изображения
+  - Положительное смещение Y: начало координат находится выше верхнего края изображения
+  - Отрицательное смещение Y: начало координат находится ниже верхнего края изображения
 
 ## Пример использования
 
@@ -434,18 +364,25 @@ processGerber = gerb2img.processGerber
 processGerber.argtypes = [
     ctypes.c_double, ctypes.c_bool, ctypes.c_bool, ctypes.c_double,
     ctypes.c_bool, ctypes.c_double, ctypes.c_double,
-    ctypes.c_double, ctypes.c_char_p, ctypes.c_char_p
+    ctypes.c_double, ctypes.c_char_p, ctypes.c_char_p,
+    ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int)
 ]
 processGerber.restype = ctypes.c_int
+
+# Переменные для получения смещения начала координат
+offsetX = ctypes.c_int(0)
+offsetY = ctypes.c_int(0)
 
 # Вызов функции для Gerber
 result = processGerber(
     2400.0, False, False, 0.0, False, 0.0, 1.0, 1.0,
-    b"output.bmp", b"example.gbr"
+    b"output.bmp", b"example.gbr",
+    ctypes.byref(offsetX), ctypes.byref(offsetY)
 )
 
 if result == 0:
     print("Конвертация Gerber успешна!")
+    print(f"Смещение начала координат: X={offsetX.value}, Y={offsetY.value} пикселей")
 else:
     print("Ошибка конвертации Gerber!")
 
@@ -456,48 +393,29 @@ processExcellon.argtypes = [
     ctypes.c_bool, ctypes.c_double, ctypes.c_double,
     ctypes.c_double, ctypes.c_bool, ctypes.c_bool,
     ctypes.c_double, ctypes.c_char_p, ctypes.c_char_p,
+    ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
     ctypes.POINTER(ctypes.c_int)
 ]
 processExcellon.restype = ctypes.c_int
 
 # Вызов функции для Excellon
 drill_count = ctypes.c_int(0)
+offsetX_drill = ctypes.c_int(0)
+offsetY_drill = ctypes.c_int(0)
+
 result = processExcellon(
     2400.0, False, 0.0, False, 0.0, 1.0, 1.0,
     False, False, 0.0,
     b"drill_output.bmp", b"example.drl",
-    ctypes.byref(drill_count)
+    ctypes.byref(drill_count), ctypes.byref(offsetX_drill),
+    ctypes.byref(offsetY_drill)
 )
 
 if result == 0:
     print(f"Конвертация Excellon успешна! Количество сверловок: {drill_count.value}")
+    print(f"Смещение начала координат: X={offsetX_drill.value}, Y={offsetY_drill.value} пикселей")
 else:
     print("Ошибка конвертации Excellon!")
-
-# Использование JSON API
-processGerberJSON = gerb2img.processGerberJSON
-processGerberJSON.argtypes = [ctypes.c_char_p]
-processGerberJSON.restype = ctypes.c_int
-
-processExcellonJSON = gerb2img.processExcellonJSON
-processExcellonJSON.argtypes = [ctypes.c_char_p]
-processExcellonJSON.restype = ctypes.c_int
-
-# JSON пример для Gerber
-gerber_json = b'''{"imageDPI": 2400.0, "optGrowUnitsMillimeters": false, 
-"optBoarderUnitsMillimeters": false, "optBoarder": 0.0, "optInvertPolarity": false, 
-"optGrowSize": 0.0, "optScaleX": 1.0, "optScaleY": 1.0, 
-"outputFilename": "output_json.bmp", "inputFilename": "example.gbr"}'''
-
-# JSON пример для Excellon
-excellon_json = b'''{"imageDPI": 2400.0, "optGrowUnitsMillimeters": false, 
-"optBoarderUnitsMillimeters": false, "optBoarder": 0.0, "optInvertPolarity": false, 
-"optGrowSize": 0.02, "optScaleX": 1.0, "optScaleY": 1.0, 
-"outputFilename": "drill_output_json.bmp", "inputFilename": "example.drl"}'''
-
-# Вызов JSON функций
-result_gerber_json = processGerberJSON(gerber_json)
-result_excellon_json = processExcellonJSON(excellon_json)
 ```
 
 ### Delphi
@@ -518,21 +436,27 @@ type
     optScaleX: Double;
     optScaleY: Double;
     outputFilename: PAnsiChar;
-    inputFilename: PAnsiChar
+    inputFilename: PAnsiChar;
+    offsetX: PInteger;
+    offsetY: PInteger
   ): Integer; stdcall;
 
   TProcessExcellon = function(
     imageDPI: Double;
-    optGrowUnitsMillimeters: Boolean;
-    optBoarderUnitsMillimeters: Boolean;
+    unitsMillimeters: Boolean;
     optBoarder: Double;
     optInvertPolarity: Boolean;
     optGrowSize: Double;
     optScaleX: Double;
     optScaleY: Double;
+    uniformDrills: Boolean;
+    uniformDrillsMillimeters: Boolean;
+    uniformDrillDiameter: Double;
     outputFilename: PAnsiChar;
     inputFilename: PAnsiChar;
-    drillCount: PInteger
+    drillCount: PInteger;
+    offsetX: PInteger;
+    offsetY: PInteger
   ): Integer; stdcall;
 
 var
@@ -554,16 +478,24 @@ begin
     raise Exception.Create('Не удалось найти функцию processExcellon');
 
   try
+    var offsetX, offsetY: Integer;
     if ProcessGerber(2400.0, False, False, 0.0, False, 0.0, 1.0, 1.0,
-      'output.bmp', 'example.gbr') = 0 then
-      Writeln('Конвертация Gerber успешна!')
+      'output.bmp', 'example.gbr', @offsetX, @offsetY) = 0 then
+    begin
+      Writeln('Конвертация Gerber успешна!');
+      Writeln('Смещение начала координат: X=', offsetX, ', Y=', offsetY, ' пикселей');
+    end
     else
       Writeln('Ошибка конвертации Gerber!');
 
-    var drillCount: Integer;
-    if ProcessExcellon(2400.0, False, False, 0.0, False, 0.0, 1.0, 1.0,
-      'drill_output.bmp', 'example.drl', @drillCount) = 0 then
-      Writeln('Конвертация Excellon успешна! Количество сверловок: ', drillCount)
+    var drillCount, offsetX_drill, offsetY_drill: Integer;
+    if ProcessExcellon(2400.0, False, 0.0, False, 0.0, 1.0, 1.0,
+      False, False, 0.0, 'drill_output.bmp', 'example.drl', 
+      @drillCount, @offsetX_drill, @offsetY_drill) = 0 then
+    begin
+      Writeln('Конвертация Excellon успешна! Количество сверловок: ', drillCount);
+      Writeln('Смещение начала координат: X=', offsetX_drill, ', Y=', offsetY_drill, ' пикселей');
+    end
     else
       Writeln('Ошибка конвертации Excellon!');
   finally
@@ -585,7 +517,6 @@ end.
 - Библиотеки:
   - [libtiff](http://www.libtiff.org/)
   - [EasyBMP](http://easybmp.sourceforge.net/) - Уже есть
-  - [nlohmann/json](https://github.com/nlohmann/json) - Уже есть
 
 ## 🔧 Инструкции по сборке под Windows (MinGW)
 

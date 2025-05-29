@@ -63,6 +63,7 @@ private:
     bool isLeadingZeros;        // Подавление ведущих нулей
     bool isTrailingZeros;       // Подавление конечных нулей
     int coordDecimals;          // Количество цифр после запятой
+    int coordInts;              // Количество цифр до запятой
     int lineNumber;             // Номер текущей строки
     bool excellonFormat2;       // Формат Excellon 2
     double scaleFactor;         // Коэффициент масштабирования для конвертации в пиксели
