@@ -339,7 +339,9 @@ void Excellon::parseCoordinate(const string& line) {
         drillPositions.push_back(pos);
         
         // Выбираем диаметр отверстия - либо унифицированный, либо из инструмента
-        double diameter = (uniformDrillDiameter > 0) ? uniformDrillDiameter : tools[currentTool].diameter;
+        double diameter = (uniformDrillDiameter > 0) ? 
+                         getEffectiveDrillDiameter() : 
+                         tools[currentTool].diameter;
         
         // Создаем полигон для отверстия с выбранным диаметром
         createDrillPolygon(x, y, diameter);
@@ -427,6 +429,27 @@ double Excellon::parseCoord(const string& coord,
 #endif
         return result;
     }
+}
+
+/**
+ * @brief Возвращает эффективный диаметр сверла с учетом единиц измерения
+ * 
+ * @return double Значение диаметра в текущих единицах измерения файла Excellon
+ */
+double Excellon::getEffectiveDrillDiameter() {
+    if (uniformDrillDiameter <= 0) 
+        return 0; // Если единый диаметр не задан, возвращаем 0
+        
+    // Если диаметр указан в мм, а формат в дюймах - конвертируем мм в дюймы
+    if (uniformDrillInMillimeters && units == INCH) 
+        return uniformDrillDiameter / 25.4;
+        
+    // Если диаметр указан в дюймах, а формат в мм - конвертируем дюймы в мм  
+    if (!uniformDrillInMillimeters && units == MILLIMETER)
+        return uniformDrillDiameter * 25.4;
+        
+    // В остальных случаях (единицы совпадают) - возвращаем как есть
+    return uniformDrillDiameter;
 }
 
 /**
@@ -560,8 +583,8 @@ Excellon::Excellon(FILE* fp_excellon, const double dotsPerInch, const double gro
                    double optScaleX, double optScaleY, double uniformDrillDiameter,
                    bool uniformDrillInMillimeters)
     : dotsPerInch(dotsPerInch), growSize(growSize), optScaleX(optScaleX), optScaleY(optScaleY),
-      uniformDrillDiameter(uniformDrillInMillimeters && uniformDrillDiameter > 0 ? 
-                          uniformDrillDiameter / 25.4 : uniformDrillDiameter), // Конвертация из мм в дюймы если нужно
+      uniformDrillDiameter(uniformDrillDiameter), // Просто сохраняем как есть без преждевременной конвертации
+      uniformDrillInMillimeters(uniformDrillInMillimeters), // Добавляем хранение этого флага
       currentTool(0), currentX(0), currentY(0), 
       units(INCH), isHeaderActive(false), isAbsoluteCoords(true), isLeadingZeros(true), 
       isTrailingZeros(false), coordDecimals(4), coordInts(0), lineNumber(1), excellonFormat2(false), 

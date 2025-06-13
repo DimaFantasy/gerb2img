@@ -31,6 +31,7 @@ private:
     const double optScaleX;      // Масштабирование по оси X
     const double optScaleY;      // Масштабирование по оси Y
     const double uniformDrillDiameter; // Значение диаметра для всех отверстий (если > 0)
+    const bool uniformDrillInMillimeters; // Флаг, указывающий в каких единицах задан uniformDrillDiameter
 
     // Перечисление для единиц измерения
     typedef enum {MILLIMETER, INCH, UNDEFINED} Units_t;
@@ -79,6 +80,7 @@ private:
     double parseCoord(const string& coord, bool isX);
     double getPixelsFromUnits(double value);
     void createDrillPolygon(double x, double y, double diameter);
+    double getEffectiveDrillDiameter(); // Метод для получения диаметра с учетом единиц измерения
 
 public:
     /**
