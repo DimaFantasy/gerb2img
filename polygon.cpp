@@ -19,7 +19,7 @@
 
 using namespace std;
 
-#define ENABLE_DEBUG_LOGGING_POLIGON
+//#define ENABLE_DEBUG_LOGGING_POLIGON
 
 /*
  *  Polygon initialisation.
