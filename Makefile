@@ -49,7 +49,7 @@ LDFLAGS_EXE := -lm -lpthread -lstdc++
 LIBS := \
     -ltiff -lzstd -ljpeg -lz -llzma -ljbig -lwebp -ldeflate \
     -llerc -lsharpyuv \
-    -lgdi32 -luser32 -lcomdlg32 -lgdiplus -lshlwapi
+    -lgdi32 -luser32 -lcomdlg32 -lgdiplus -lshlwapi 
 
 # Исходники
 SRCS_DLL := \
@@ -60,8 +60,8 @@ SRCS_DLL := \
     excellon.cpp \
     gerber_bison.cc \
     gerber_flex.cc \
-    EasyBMP/EasyBMP.cpp
-
+    EasyBMP/EasyBMP.cpp 
+	
 SRCS_EXE := \
     main_exe.cpp \
     apertures.cpp \
@@ -70,7 +70,7 @@ SRCS_EXE := \
     excellon.cpp \
     gerber_bison.cc \
     gerber_flex.cc \
-    EasyBMP/EasyBMP.cpp
+    EasyBMP/EasyBMP.cpp 
 
 # Правило для генерации лексера с помощью Flex
 gerber_flex.cc: gerber_flex.ll

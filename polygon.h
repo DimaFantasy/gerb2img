@@ -114,7 +114,7 @@ private:
     std::vector<int> linesInCounts;	// For each scan line, linesInCounts holds number of x intersections.
 	Point lastVertex;
 	friend class Polygon;
-	int pixelHeigth;
+	int pixelHeight;
 	int pixelWidth;
 
 public:
@@ -144,6 +144,8 @@ class Polygon
 private:
 	int * nextInTable;
 	int * nextInCount;
+    // новое поле: индекс текущей строки
+    int currentLine;	
 
 public:
 	VertexData * vdata;
@@ -157,6 +159,7 @@ public:
 	Polygon () 
 		: nextInTable(0)
 		, nextInCount(0)
+        , currentLine(0)   // инициализация нового индекса		
 		, vdata(new VertexData)
 		, pixelMinX(0), pixelMinY(0), pixelMaxX(0), pixelMaxY(0)
 		, pixelOffsetX(0)
@@ -165,7 +168,7 @@ public:
 		, polarity(DARK) // default to a dark polarity
 	{ }
 
-	void initialise();
+    void initialise() ;  // объявление функции
 	std::vector<int> const & getNextLineX1X2Pairs();
 	bool empty()   	{ return vdata->empty(); }
 	bool operator<(const Polygon &rhs) const
@@ -178,20 +181,26 @@ public:
 	 * the polygon.    Used for plotting filled polygon to a bitmap. Horizontal lines are to be drawn between each odd and even pair in the
 	 * x intercept data pointed to by sliTable.
 	 */
-	void getNextLineX1X2Pairs(int * &sliTable, int &sliCount )
-	{
-		 // Resets the scan line counters to zero  on first call to this function
-		if (nextInCount == 0)
-		{
-			nextInCount = &vdata->linesInCounts.front();
-			nextInTable = &vdata->gxIntersects.front();
-		}
+    void getNextLineX1X2Pairs(int * &sliTable, int &sliCount) {
+        // конец таблицы
+        if (!vdata || currentLine >= (int)vdata->linesInCounts.size()) {
+            sliCount = 0;
+            sliTable = nullptr;
+            return;
+        }
 
-		sliCount = *nextInCount;
-		sliTable = nextInTable;
-		nextInTable += sliCount;
-		nextInCount++;
-	}
+        // берём количество X на этой строке
+        sliCount = vdata->linesInCounts[currentLine];
+
+        // указатель на первую координату X этой строки
+        int offset = 0;
+        for (int i = 0; i < currentLine; i++)
+            offset += vdata->linesInCounts[i];
+
+        sliTable = &vdata->gxIntersects[offset];
+
+        currentLine++;
+    }
 };
 
 
@@ -205,7 +214,6 @@ public:
 		return polygon->number < rhs.polygon->number;
 	}
 };
-
 
 
 #endif /*POLYGON_H_*/
