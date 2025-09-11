@@ -83,73 +83,58 @@ void Aperture::render(const double dots_per_unit, const double grow_size, int AD
 	//		 STANDARD APERTURE 'C' CIRCLE
 	//		 SPECIAL  APERTURE primitive #1  Circle
 	// ******************************************************************************
-	case STANDARD_CIRCLE:
-	case STANDARD_ORBROUND:
-	case SPECIAL_CIRCLE:
+	case STANDARD_CIRCLE :
+	case STANDARD_ORBROUND :
+	case SPECIAL_CIRCLE :
 	{
-		double ysize, xsize, x_center = 0, y_center = 0;
-		polygons.push_back(Polygon());        // Create instance of empty polygon
-	
+		double  ysize, xsize, x_center=0, y_center=0;
+		polygons.push_back(Polygon());		// Create instance of empty polygon
+
 		if (primitive == STANDARD_CIRCLE)
 		{
 			ysize = xsize = getParameter(0) * dots_per_unit;
-			if (ADmodifierCount > 1) standardHoleX = getParameter(1) * dots_per_unit;
-			if (ADmodifierCount > 2) standardHoleY = getParameter(2) * dots_per_unit;
+			if ( ADmodifierCount > 1) 	standardHoleX = getParameter(1)*dots_per_unit;
+			if ( ADmodifierCount > 2) 	standardHoleY = getParameter(2)*dots_per_unit;
 		}
-		else if (primitive == STANDARD_ORBROUND)
+		else if (primitive  == STANDARD_ORBROUND)
 		{
-			xsize = getParameter(0) * dots_per_unit;
-			ysize = getParameter(1) * dots_per_unit;
-			if (ADmodifierCount > 2) standardHoleX = getParameter(2) * dots_per_unit;
-			if (ADmodifierCount > 3) standardHoleY = getParameter(3) * dots_per_unit;
+			xsize 		= getParameter(0) * dots_per_unit;
+			ysize 		= getParameter(1) * dots_per_unit;
+			if ( ADmodifierCount > 2) 	standardHoleX = getParameter(2)*dots_per_unit;
+			if ( ADmodifierCount > 3) 	standardHoleY = getParameter(3)*dots_per_unit;
 		}
 		else if (primitive == SPECIAL_CIRCLE)
 		{
-			if (getParameter(0) == 1) { polygons.back().polarity = CLEAR; }
-			ysize = xsize = getParameter(1) * dots_per_unit;
-			x_center = getParameter(2) * dots_per_unit;
-			y_center = getParameter(3) * dots_per_unit;
+			if (getParameter(0) == 1) {	polygons.back().polarity = CLEAR; }
+			ysize = xsize 	= getParameter(1) * dots_per_unit;
+			x_center 		= getParameter(2) * dots_per_unit;
+			y_center 		= getParameter(3) * dots_per_unit;
 		}
 		else throw;
-		
-		standardApWidth = xsize;        // Save size of Standard C or R for trace plotting use.
+		standardApWidth = xsize;		// Save size of Standard C or R for trace plotting use.
 		standardApHeight = ysize;
-	
-		if (xsize < 0 || ysize < 0) throw std::string("dimension must be > 0");
-	
-		xsize += grow_size;
-		ysize += grow_size;
-	
-		if (xsize < 1) xsize = 1;        // handle zero radius circles as single pixel.
-		if (ysize < 1) ysize = 1;
-	
-		double arc_offset = (xsize - ysize) / 2;
-	
-		if (xsize > ysize)    // horizontal orbround
-		{
-			// 🔧 Исправлено: используем floor() для стабильной толщины
-			int diameter_y = static_cast<int>(std::floor(ysize));
-			if (diameter_y % 2 == 0) {
-				diameter_y--;  // гарантируем нечетный диаметр
-			}
-			double radius = diameter_y / 2.0;
-			
-			polygons.back().vdata->addArc(0.5 * M_PI, 1.5 * M_PI, radius, x_center - arc_offset, y_center);
-			polygons.back().vdata->addArc(1.5 * M_PI, 2.5 * M_PI, radius, x_center + arc_offset, y_center);
-		}
-		else                // vertical orbround or circle
-		{
-			// 🔧 Исправлено: используем floor() для стабильной толщины
-			int diameter_x = static_cast<int>(std::floor(xsize));
-			if (diameter_x % 2 == 0) {
-				diameter_x--;  // гарантируем нечетный диаметр
-			}
-			double radius = diameter_x / 2.0;
-	
-			polygons.back().vdata->addArc(0 * M_PI, 1 * M_PI, radius, x_center, y_center);
-			polygons.back().vdata->addArc(1 * M_PI, 2 * M_PI, radius, x_center, y_center);
-		}
-		break;
+
+	    if (xsize<0 || ysize<0) throw std::string("dimension must be > 0");
+
+	    xsize += grow_size;
+	    ysize += grow_size;
+
+	    if (xsize < 1) xsize = 1;		// handle zero radius circles as single pixel.
+	    if (ysize < 1) ysize = 1;
+
+    	double arc_offset = (xsize - ysize)/2;
+
+	    if (xsize > ysize )	// horizontal orbround
+	    {
+	    	polygons.back().vdata->addArc(0.5*M_PI, 1.5*M_PI, ysize/2, x_center - arc_offset , y_center);
+	    	polygons.back().vdata->addArc(1.5*M_PI, 2.5*M_PI, ysize/2, x_center + arc_offset, y_center);
+	    }
+	    else				// vertical orbround or circle
+	    {
+	    	polygons.back().vdata->addArc(0*M_PI, 1*M_PI, xsize/2, x_center , y_center - arc_offset);
+	    	polygons.back().vdata->addArc(1*M_PI, 2*M_PI, xsize/2, x_center , y_center + arc_offset);
+	    }
+	    break;
 	} // end of case
 
 	// ******************************************************************************
