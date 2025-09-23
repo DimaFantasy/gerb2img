@@ -349,86 +349,107 @@ void Excellon::parseCoordinate(const string& line) {
 }
 
 /**
- * @brief Разбор значения координаты
+ * @brief Разбор значения координаты с учетом формата (TZ/LZ) и неявных десятичных точек
  * 
  * @param coord Строка с координатой
- * @param isX Флаг, указывающий, является ли это X координатой
+ * @param isX Флаг, указывающий, является ли это X координатой (для логирования)
  * @return Значение координаты в единицах измерения
  */
-double Excellon::parseCoord(const string& coord, 
-	#ifdef ENABLE_DEBUG_LOGGING
-		bool isX
-	#else
-		bool /* isX */
-	#endif
-	) {
-    // Логируем входные данные
+double Excellon::parseCoord(const string& coord,
+    #ifdef ENABLE_DEBUG_LOGGING
+        bool isX
+    #else
+        bool /* isX */
+    #endif
+) {
 #ifdef ENABLE_DEBUG_LOGGING
     std::ofstream logFile("excellon_debug.log", std::ios::app);
     logFile << "[DEBUG] Разбор координаты " << (isX ? "X" : "Y") << ": " << coord;
 #endif
 
-    // Проверка на наличие десятичной точки
+    string coordStr = coord;
+    bool isNegative = false;
+
+    // Обработка знака
+    if (!coordStr.empty() && (coordStr[0] == '+' || coordStr[0] == '-')) {
+        isNegative = (coordStr[0] == '-');
+        coordStr = coordStr.substr(1);
+    }
+
+    // Если есть явная десятичная точка — парсим как есть
     if (coord.find('.') != string::npos) {
         double result = stod(coord);
 #ifdef ENABLE_DEBUG_LOGGING
         logFile << " (с десятичной точкой) -> " << result << "\n";
 #endif
-        return result;
+        return isNegative ? -result : result;
     }
-    
-    // Получаем строку без знака
-    string coordStr = coord;
-    bool isNegative = false;
-    
-    if (!coordStr.empty() && (coordStr[0] == '+' || coordStr[0] == '-')) {
-        isNegative = (coordStr[0] == '-');
-        coordStr = coordStr.substr(1); // Убираем знак
-    }
-    
-    // Если задан формат FILE_FORMAT=X:Y, используем его для разделения
-    if (coordInts > 0) {
-        // Строковый метод разделения на целую и дробную части
-        string integerPart, fractionalPart;
-        
-        // Если длина строки <= количеству целых цифр, то дробной части нет
-        if (static_cast<int>(coordStr.length()) <= coordInts) {
-            integerPart = coordStr;
-            fractionalPart = "0";
+
+    // Определяем общее количество цифр в формате
+    int totalDigits = coordInts + coordDecimals;
+
+    // Если формат не задан (coordInts == 0), используем эвристику:
+    // Для METRIC — 3.3, для INCH — 2.4
+    if (coordInts == 0) {
+        if (units == MILLIMETER) {
+            coordInts = 3;
+            coordDecimals = 3;
+            totalDigits = 6;
+#ifdef ENABLE_DEBUG_LOGGING
+            std::ofstream logFile("excellon_debug.log", std::ios::app);
+            logFile << " [ЭВРИСТИКА] Применён формат 3.3 для METRIC\n";
+#endif
         } else {
-            // Разделяем строку на целую и дробную части согласно формату
-            integerPart = coordStr.substr(0, coordInts);
-            fractionalPart = coordStr.substr(coordInts);
+            coordInts = 2; // типично для дюймов: 2.4
+            totalDigits = coordInts + coordDecimals;
         }
-        
-        // Собираем итоговое число в виде строки с десятичной точкой
-        string resultStr = integerPart + "." + fractionalPart;
-        double result = stod(resultStr);
-        
-        // Применяем знак, если был отрицательный
-        if (isNegative) {
-            result = -result;
-        }
-        
-#ifdef ENABLE_DEBUG_LOGGING
-        logFile << " (формат " << coordInts << ":" << coordDecimals 
-                << ", целая часть: " << integerPart 
-                << ", дробная часть: " << fractionalPart 
-                << ") -> " << result << "\n";
-#endif
-        return result;
-    } else {
-        // Если формат не задан явно, используем стандартный подход с coordDecimals
-        double value = stod(coord);
-        double divisor = pow(10, coordDecimals);
-        double result = value / divisor;
-        
-#ifdef ENABLE_DEBUG_LOGGING
-        logFile << " (стандартный формат, " << coordDecimals 
-                << " цифр после запятой) -> " << result << "\n";
-#endif
-        return result;
     }
+
+    string padded;
+
+    if (isTrailingZeros) {
+        // TZ: дополняем нулями СПРАВА до totalDigits
+        padded = coordStr;
+        while (padded.length() < static_cast<size_t>(totalDigits)) {
+            padded += '0';
+        }
+    } else {
+        // LZ (или по умолчанию): дополняем нулями СЛЕВА
+        if (coordStr.length() < static_cast<size_t>(totalDigits)) {
+            padded = string(static_cast<size_t>(totalDigits) - coordStr.length(), '0') + coordStr;
+        } else {
+            padded = coordStr;
+        }
+    }
+
+    // Обрезаем, если строка длиннее totalDigits
+    if (padded.length() > static_cast<size_t>(totalDigits)) {
+        padded = padded.substr(0, static_cast<size_t>(totalDigits));
+    }
+
+    // Разделяем на целую и дробную части
+    string integerPart = (coordInts > 0) ? padded.substr(0, static_cast<size_t>(coordInts)) : "0";
+    string fractionalPart = (coordDecimals > 0 && padded.length() > static_cast<size_t>(coordInts))
+                          ? padded.substr(static_cast<size_t>(coordInts), static_cast<size_t>(coordDecimals))
+                          : "0";
+
+    // Собираем число с десятичной точкой
+    string resultStr = integerPart + "." + fractionalPart;
+    double result = stod(resultStr);
+
+    if (isNegative) {
+        result = -result;
+    }
+
+#ifdef ENABLE_DEBUG_LOGGING
+    logFile << " (формат " << coordInts << ":" << coordDecimals
+            << ", " << (isTrailingZeros ? "TZ" : "LZ")
+            << ", дополнено: '" << padded << "'"
+            << ", целая: '" << integerPart << "', дробная: '" << fractionalPart << "')"
+            << " -> " << result << "\n";
+#endif
+
+    return result;
 }
 
 /**
